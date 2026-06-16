@@ -83,7 +83,16 @@ class CardDetector:
                 out_w, out_h = bw, bh
             dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
             m = cv2.getPerspectiveTransform(bounds.astype(np.float32), dst)
-            return cv2.warpPerspective(bgr, m, (out_w, out_h))
+            warped = cv2.warpPerspective(bgr, m, (out_w, out_h))
+            max_side = config.CARD_OUTPUT_H
+            if max(out_w, out_h) > max_side:
+                scale = max_side / max(out_w, out_h)
+                warped = cv2.resize(
+                    warped,
+                    (int(out_w * scale), int(out_h * scale)),
+                    interpolation=cv2.INTER_AREA,
+                )
+            return warped
 
         fh, fw = bgr.shape[:2]
         card_ratio = out_h / out_w  # 1.40
