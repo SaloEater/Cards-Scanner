@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from dotenv import dotenv_values
+from dotenv import dotenv_values, set_key
 
 _ROOT = Path(__file__).parent.parent
 _env = dotenv_values(_ROOT / ".env")
@@ -13,6 +13,10 @@ def _str(key: str, default: str) -> str:
 def _int(key: str, default: int) -> int:
     v = _env.get(key)
     return int(v) if v is not None else default
+
+
+def save(key: str, value: str) -> None:
+    set_key(str(_ROOT / ".env"), key, value)
 
 
 def _float(key: str, default: float) -> float:

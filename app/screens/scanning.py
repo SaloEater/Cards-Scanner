@@ -124,6 +124,9 @@ class ScanningScreen(QWidget):
         self._canny_low_slider.setRange(1, 255)
         self._canny_low_slider.setValue(config.CANNY_LOW)
         self._canny_low_slider.valueChanged.connect(self._on_canny_low_changed)
+        self._canny_low_slider.sliderReleased.connect(
+            lambda: config.save("CANNY_LOW", str(self._canny_low_slider.value()))
+        )
         right.addWidget(self._canny_low_slider)
 
         self._canny_high_label = QLabel(f"Canny high: {config.CANNY_HIGH}")
@@ -132,6 +135,9 @@ class ScanningScreen(QWidget):
         self._canny_high_slider.setRange(1, 255)
         self._canny_high_slider.setValue(config.CANNY_HIGH)
         self._canny_high_slider.valueChanged.connect(self._on_canny_high_changed)
+        self._canny_high_slider.sliderReleased.connect(
+            lambda: config.save("CANNY_HIGH", str(self._canny_high_slider.value()))
+        )
         right.addWidget(self._canny_high_slider)
 
         self._debug_btn = QPushButton("Debug")
