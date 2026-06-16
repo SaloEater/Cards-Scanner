@@ -186,6 +186,20 @@ class CardDetector:
             cv2.polylines(bgr, [pts], True, (0, 255, 0), 3)
             for pt in pts:
                 cv2.circle(bgr, tuple(pt), 8, (0, 255, 0), -1)
+
+            # "top" label on the outer side of the top edge (bounds[0]→bounds[1])
+            mid = ((bounds[0] + bounds[1]) / 2)
+            center = bounds.mean(axis=0)
+            direction = mid - center
+            norm = np.linalg.norm(direction)
+            if norm > 0:
+                unit = direction / norm
+                font, scale, thickness = cv2.FONT_HERSHEY_SIMPLEX, 1.2, 2
+                (tw, th), baseline = cv2.getTextSize("top", font, scale, thickness)
+                pos = (mid + unit * 50).astype(int)
+                tx, ty = int(pos[0] - tw / 2), int(pos[1] + th / 2)
+                cv2.rectangle(bgr, (tx - 6, ty - th - 6), (tx + tw + 6, ty + baseline + 6), (0, 0, 0), -1)
+                cv2.putText(bgr, "top", (tx, ty), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
         else:
             fh, fw = bgr.shape[:2]
             out_w, out_h = config.CARD_OUTPUT_W, config.CARD_OUTPUT_H
