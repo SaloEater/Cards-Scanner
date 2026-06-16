@@ -3,3 +3,4 @@
 *.iml
 .env
 app/__pycache__
+app/screen/__pycache__
