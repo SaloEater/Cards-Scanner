@@ -75,6 +75,9 @@ class CameraWorker(QThread):
                 bounds = self._detector.detect(bgr)
                 display = self._detector.draw_overlay(bgr.copy(), bounds)
                 ph, pw = display.shape[:2]
+                cx, cy = pw // 2, ph // 2
+                cv2.line(display, (0, cy), (pw, cy), (255, 255, 255), 1)
+                cv2.line(display, (cx, 0), (cx, ph), (255, 255, 255), 1)
                 scale = config.PREVIEW_WIDTH / pw
                 preview = cv2.resize(
                     display,
