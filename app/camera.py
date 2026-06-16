@@ -51,6 +51,9 @@ class CameraWorker(QThread):
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAMERA_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAMERA_HEIGHT)
         cap.set(cv2.CAP_PROP_FPS, 30)
+        actual_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        print(f"[camera] requested {config.CAMERA_WIDTH}×{config.CAMERA_HEIGHT}, got {actual_w}×{actual_h}")
 
         try:
             while self._running:
