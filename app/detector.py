@@ -74,13 +74,13 @@ class CardDetector:
         return self._stable_bounds
 
     def crop_card(self, bgr: np.ndarray, bounds: np.ndarray | None) -> np.ndarray:
-        out_w, out_h = config.CARD_OUTPUT_W, config.CARD_OUTPUT_H
-
         if bounds is not None:
-            bw = np.linalg.norm(bounds[1] - bounds[0])
-            bh = np.linalg.norm(bounds[3] - bounds[0])
+            bw = int(np.linalg.norm(bounds[1] - bounds[0]))
+            bh = int(np.linalg.norm(bounds[3] - bounds[0]))
             if bw > bh:
-                out_w, out_h = out_h, out_w
+                out_w, out_h = bh, bw
+            else:
+                out_w, out_h = bw, bh
             dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
             m = cv2.getPerspectiveTransform(bounds.astype(np.float32), dst)
             return cv2.warpPerspective(bgr, m, (out_w, out_h))

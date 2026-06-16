@@ -90,8 +90,10 @@ class ScanningScreen(QWidget):
         self._preview_stack.addWidget(dbg_widget)
         root.addWidget(self._preview_stack)
 
-        # Right panel — controls
-        right = QVBoxLayout()
+        # Right panel — controls (fixed width)
+        right_widget = QWidget()
+        right_widget.setFixedWidth(240)
+        right = QVBoxLayout(right_widget)
         right.setAlignment(Qt.AlignmentFlag.AlignTop)
         right.setSpacing(12)
 
@@ -152,7 +154,7 @@ class ScanningScreen(QWidget):
         done_btn.clicked.connect(self._on_done)
         right.addWidget(done_btn)
 
-        root.addLayout(right)
+        root.addWidget(right_widget)
 
         QShortcut(QKeySequence(Qt.Key.Key_Return), self).activated.connect(self._camera.request_capture)
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(self._on_done)
