@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -48,18 +49,21 @@ class ScanningScreen(QWidget):
 
         # Left panel — QStackedWidget switching between normal and debug views
         self._preview_stack = QStackedWidget()
-        self._preview_stack.setFixedWidth(640)
+        self._preview_stack.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
         # Page 0: normal full preview
         self._preview = QLabel()
-        self._preview.setFixedSize(640, 480)
+        self._preview.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self._preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._preview.setStyleSheet("background: black;")
         self._preview_stack.addWidget(self._preview)
 
         # Page 1: 2×2 debug grid
         dbg_widget = QWidget()
-        dbg_widget.setFixedSize(640, 480)
         dbg_grid = QGridLayout(dbg_widget)
         dbg_grid.setSpacing(4)
         dbg_grid.setContentsMargins(4, 4, 4, 4)
