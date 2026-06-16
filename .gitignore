@@ -4,3 +4,5 @@
 .env
 app/__pycache__
 app/screen/__pycache__
+start.bat
+update.bat
