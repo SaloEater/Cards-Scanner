@@ -22,10 +22,17 @@ class CameraWorker(QThread):
     camera_error = Signal(str)
     debug_ready = Signal(QPixmap, QPixmap, str)   # (edges_pixmap, contours_pixmap, rejection)
 
+    _CV_ROTATIONS = {
+        90:  cv2.ROTATE_90_CLOCKWISE,
+        180: cv2.ROTATE_180,
+        270: cv2.ROTATE_90_COUNTERCLOCKWISE,
+    }
+
     def __init__(self, detector: CardDetector, parent=None) -> None:
         super().__init__(parent)
         self._detector = detector
         self._camera_index: int = config.CAMERA_INDEX
+        self._rotation: int = config.CAMERA_ROTATION  # 0 / 90 / 180 / 270
         self._running = False
         self._paused = False
         self._capture_requested = False
@@ -54,6 +61,12 @@ class CameraWorker(QThread):
                     self.camera_error.emit("Frame read failed")
                     break
 
+                self._mutex.lock()
+                rotation = self._rotation
+                self._mutex.unlock()
+                if rotation in self._CV_ROTATIONS:
+                    bgr = cv2.rotate(bgr, self._CV_ROTATIONS[rotation])
+
                 bounds = self._detector.detect(bgr)
                 display = self._detector.draw_overlay(bgr.copy(), bounds)
                 pixmap = _bgr_to_pixmap(display)
@@ -80,6 +93,11 @@ class CameraWorker(QThread):
                     self.debug_ready.emit(edges_px, contours_px, rejection)
         finally:
             cap.release()
+
+    def set_rotation(self, degrees: int) -> None:
+        self._mutex.lock()
+        self._rotation = degrees % 360
+        self._mutex.unlock()
 
     def set_debug(self, enabled: bool) -> None:
         self._mutex.lock()

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app import config
 from app.camera import CameraWorker
 from app.detector import CardDetector
 from app.models import Series
@@ -41,6 +42,7 @@ class ScanningScreen(QWidget):
         self._detector = detector
         self._series: Series | None = None
         self._cameras_populated = False
+        self._rotation: int = config.CAMERA_ROTATION
         self._build_ui()
         self._connect_camera()
 
@@ -96,6 +98,22 @@ class ScanningScreen(QWidget):
         self._camera_combo = QComboBox()
         self._camera_combo.currentIndexChanged.connect(self._on_camera_changed)
         right.addWidget(self._camera_combo)
+
+        right.addWidget(QLabel("Rotation:"))
+        rot_row = QHBoxLayout()
+        self._rot_label = QLabel("0°")
+        self._rot_label.setFixedWidth(36)
+        rot_ccw = QPushButton("↺")
+        rot_ccw.setFixedWidth(36)
+        rot_ccw.clicked.connect(self._rotate_ccw)
+        rot_cw = QPushButton("↻")
+        rot_cw.setFixedWidth(36)
+        rot_cw.clicked.connect(self._rotate_cw)
+        rot_row.addWidget(rot_ccw)
+        rot_row.addWidget(self._rot_label)
+        rot_row.addWidget(rot_cw)
+        rot_row.addStretch()
+        right.addLayout(rot_row)
 
         self._debug_btn = QPushButton("Debug")
         self._debug_btn.setCheckable(True)
@@ -214,6 +232,16 @@ class ScanningScreen(QWidget):
     def _on_camera_error(self, msg: str) -> None:
         self._status_label.setText(f"Camera error: {msg}")
         self._status_label.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
+
+    def _rotate_cw(self) -> None:
+        self._rotation = (self._rotation + 90) % 360
+        self._rot_label.setText(f"{self._rotation}°")
+        self._camera.set_rotation(self._rotation)
+
+    def _rotate_ccw(self) -> None:
+        self._rotation = (self._rotation - 90) % 360
+        self._rot_label.setText(f"{self._rotation}°")
+        self._camera.set_rotation(self._rotation)
 
     def _on_done(self) -> None:
         if self._series is not None:
