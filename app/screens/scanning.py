@@ -171,6 +171,10 @@ class ScanningScreen(QWidget):
             count = 4
         for i in range(count):
             self._camera_combo.addItem(f"Camera {i}", i)
+        for i in range(self._camera_combo.count()):
+            if self._camera_combo.itemData(i) == config.CAMERA_INDEX:
+                self._camera_combo.setCurrentIndex(i)
+                break
         self._camera_combo.blockSignals(False)
         if self._camera_combo.count() > 0:
             self._camera.switch_camera(self._camera_combo.currentData())
