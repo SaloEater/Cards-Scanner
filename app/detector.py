@@ -194,10 +194,10 @@ class CardDetector:
             norm = np.linalg.norm(direction)
             if norm > 0:
                 unit = direction / norm
-                font, scale, thickness = cv2.FONT_HERSHEY_SIMPLEX, 8, 2
+                font, scale, thickness = cv2.FONT_HERSHEY_SIMPLEX, 5, 2
                 (tw, th), baseline = cv2.getTextSize("top", font, scale, thickness)
                 pos = (mid + unit * 50).astype(int)
-                tx, ty = int(pos[0] - tw / 2), int(pos[1] + th)
+                tx, ty = int(pos[0] - tw / 2), int(pos[1] - th / 3  * 2)
                 cv2.rectangle(bgr, (tx - 6, ty - th - 6), (tx + tw + 6, ty + baseline + 6), (0, 0, 0), -1)
                 cv2.putText(bgr, "top", (tx, ty), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
         else:
