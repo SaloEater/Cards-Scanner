@@ -18,6 +18,10 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
 
 
 class CardDetector:
+    def __init__(self) -> None:
+        self.canny_low: int = config.CANNY_LOW
+        self.canny_high: int = config.CANNY_HIGH
+
     def detect(self, bgr: np.ndarray) -> np.ndarray | None:
         h, w = bgr.shape[:2]
         min_area = h * w * config.MIN_CARD_AREA_FRACTION
@@ -25,7 +29,7 @@ class CardDetector:
 
         gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, config.CANNY_LOW, config.CANNY_HIGH)
+        edges = cv2.Canny(blurred, self.canny_low, self.canny_high)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
 
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -86,7 +90,7 @@ class CardDetector:
 
         gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, config.CANNY_LOW, config.CANNY_HIGH)
+        edges = cv2.Canny(blurred, self.canny_low, self.canny_high)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
         edges_bgr = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 

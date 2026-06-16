@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSizePolicy,
+    QSlider,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -114,6 +115,22 @@ class ScanningScreen(QWidget):
         rot_row.addWidget(rot_cw)
         rot_row.addStretch()
         right.addLayout(rot_row)
+
+        self._canny_low_label = QLabel(f"Canny low: {config.CANNY_LOW}")
+        right.addWidget(self._canny_low_label)
+        self._canny_low_slider = QSlider(Qt.Orientation.Horizontal)
+        self._canny_low_slider.setRange(1, 255)
+        self._canny_low_slider.setValue(config.CANNY_LOW)
+        self._canny_low_slider.valueChanged.connect(self._on_canny_low_changed)
+        right.addWidget(self._canny_low_slider)
+
+        self._canny_high_label = QLabel(f"Canny high: {config.CANNY_HIGH}")
+        right.addWidget(self._canny_high_label)
+        self._canny_high_slider = QSlider(Qt.Orientation.Horizontal)
+        self._canny_high_slider.setRange(1, 255)
+        self._canny_high_slider.setValue(config.CANNY_HIGH)
+        self._canny_high_slider.valueChanged.connect(self._on_canny_high_changed)
+        right.addWidget(self._canny_high_slider)
 
         self._debug_btn = QPushButton("Debug")
         self._debug_btn.setCheckable(True)
@@ -236,6 +253,14 @@ class ScanningScreen(QWidget):
     def _on_camera_error(self, msg: str) -> None:
         self._status_label.setText(f"Camera error: {msg}")
         self._status_label.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
+
+    def _on_canny_low_changed(self, value: int) -> None:
+        self._canny_low_label.setText(f"Canny low: {value}")
+        self._detector.canny_low = value
+
+    def _on_canny_high_changed(self, value: int) -> None:
+        self._canny_high_label.setText(f"Canny high: {value}")
+        self._detector.canny_high = value
 
     def _rotate_cw(self) -> None:
         self._rotation = (self._rotation + 90) % 360
