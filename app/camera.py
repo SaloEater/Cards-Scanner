@@ -74,7 +74,14 @@ class CameraWorker(QThread):
 
                 bounds = self._detector.detect(bgr)
                 display = self._detector.draw_overlay(bgr.copy(), bounds)
-                pixmap = _bgr_to_pixmap(display)
+                ph, pw = display.shape[:2]
+                scale = config.PREVIEW_WIDTH / pw
+                preview = cv2.resize(
+                    display,
+                    (config.PREVIEW_WIDTH, int(ph * scale)),
+                    interpolation=cv2.INTER_AREA,
+                )
+                pixmap = _bgr_to_pixmap(preview)
                 self.frame_ready.emit(pixmap, bounds is not None, bounds)
 
                 self._mutex.lock()
