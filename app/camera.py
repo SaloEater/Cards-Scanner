@@ -41,14 +41,16 @@ class CameraWorker(QThread):
 
     def run(self) -> None:
         self._running = True
-        cap = cv2.VideoCapture(self._camera_index)
+        cap = cv2.VideoCapture(self._camera_index, cv2.CAP_DSHOW)
         if not cap.isOpened():
             self._running = False
             self.camera_error.emit("Cannot open camera")
             return
 
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAMERA_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAMERA_HEIGHT)
+        cap.set(cv2.CAP_PROP_FPS, 30)
 
         try:
             while self._running:
