@@ -1,3 +1,5 @@
 .idea
 .claude
 *.iml
+.env
+app/__pycache__
