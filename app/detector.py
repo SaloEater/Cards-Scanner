@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
+from collections import deque
 
 from app import config
 
@@ -21,8 +22,11 @@ class CardDetector:
     def __init__(self) -> None:
         self.canny_low: int = config.CANNY_LOW
         self.canny_high: int = config.CANNY_HIGH
+        self._buffer: deque = deque(maxlen=config.STABILIZER_BUFFER)
+        self._miss_count: int = 0
+        self._stable_bounds: np.ndarray | None = None
 
-    def detect(self, bgr: np.ndarray) -> np.ndarray | None:
+    def _detect_raw(self, bgr: np.ndarray) -> np.ndarray | None:
         h, w = bgr.shape[:2]
         min_area = h * w * config.MIN_CARD_AREA_FRACTION
         max_area = h * w * config.MAX_CARD_AREA_FRACTION
@@ -54,6 +58,20 @@ class CardDetector:
             return rect
 
         return None
+
+    def detect(self, bgr: np.ndarray) -> np.ndarray | None:
+        raw = self._detect_raw(bgr)
+        if raw is not None:
+            self._miss_count = 0
+            self._buffer.append(raw)
+            self._stable_bounds = np.mean(np.stack(list(self._buffer)), axis=0)
+        else:
+            self._miss_count += 1
+            if self._miss_count >= config.STABILIZER_MISS_RESET:
+                self._buffer.clear()
+                self._stable_bounds = None
+                self._miss_count = 0
+        return self._stable_bounds
 
     def crop_card(self, bgr: np.ndarray, bounds: np.ndarray | None) -> np.ndarray:
         out_w, out_h = config.CARD_OUTPUT_W, config.CARD_OUTPUT_H
