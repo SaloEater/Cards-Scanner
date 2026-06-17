@@ -81,9 +81,11 @@ class CardDetector:
             bh = int(np.linalg.norm(bounds[3] - bounds[0]))
             if bw > bh:
                 out_w, out_h = bh, bw
+                # rotate dst 90° so the wide top edge maps to output height, not width
+                dst = np.float32([[out_w, 0], [out_w, out_h], [0, out_h], [0, 0]])
             else:
                 out_w, out_h = bw, bh
-            dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
+                dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
             m = cv2.getPerspectiveTransform(bounds.astype(np.float32), dst)
             warped = cv2.warpPerspective(bgr, m, (out_w, out_h))
             max_side = config.CARD_OUTPUT_H
