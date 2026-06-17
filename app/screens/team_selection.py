@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -36,6 +37,10 @@ class TeamSelectionScreen(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet("font-size: 15px; color: #ccc;")
         layout.addWidget(title)
+
+        cancel_btn = QPushButton("Cancel  [Esc]")
+        cancel_btn.clicked.connect(self._on_cancel)
+        layout.addWidget(cancel_btn)
 
         self._list = QListWidget()
         self._list.setFlow(QListWidget.Flow.LeftToRight)
