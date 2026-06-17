@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import platform
 import cv2
 import numpy as np
 from PySide6.QtCore import QMutex, QThread, Signal
@@ -7,6 +8,8 @@ from PySide6.QtGui import QImage, QPixmap
 
 from app import config
 from app.detector import CardDetector
+
+_IS_WINDOWS = platform.system() == "Windows"
 
 
 def _bgr_to_pixmap(bgr: np.ndarray) -> QPixmap:
@@ -102,7 +105,7 @@ class CameraWorker(QThread):
 
                 if debug:
                     _, edges_bgr, contours_bgr, rejection = self._detector.detect_debug(bgr)
-                    dw, dh = 300, 225
+                    dw, dh = 960, 720
                     fh, fw = edges_bgr.shape[:2]
                     scale = min(dw / fw, dh / fh)
                     scaled_size = (int(fw * scale), int(fh * scale))

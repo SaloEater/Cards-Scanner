@@ -21,12 +21,10 @@ from app.camera import CameraWorker
 from app.detector import CardDetector
 from app.models import Series
 
-_DBG_W, _DBG_H = 300, 225
-
-
 def _make_pane(label: str) -> QLabel:
     w = QLabel()
-    w.setFixedSize(_DBG_W, _DBG_H)
+    w.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+    w.setMinimumSize(120, 90)
     w.setAlignment(Qt.AlignmentFlag.AlignCenter)
     w.setStyleSheet("background: black; color: #888; font-size: 11px;")
     w.setText(label)
@@ -67,15 +65,21 @@ class ScanningScreen(QWidget):
 
         # Page 1: 2×2 debug grid
         dbg_widget = QWidget()
+        dbg_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         dbg_grid = QGridLayout(dbg_widget)
         dbg_grid.setSpacing(4)
         dbg_grid.setContentsMargins(4, 4, 4, 4)
+        dbg_grid.setColumnStretch(0, 1)
+        dbg_grid.setColumnStretch(1, 1)
+        dbg_grid.setRowStretch(0, 1)
+        dbg_grid.setRowStretch(1, 1)
 
         self._dbg_live = _make_pane("Live feed")
         self._dbg_edges = _make_pane("Canny edges")
         self._dbg_contours = _make_pane("Contour candidates")
         self._dbg_reason = QLabel("—")
-        self._dbg_reason.setFixedSize(_DBG_W, _DBG_H)
+        self._dbg_reason.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._dbg_reason.setMinimumSize(120, 90)
         self._dbg_reason.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._dbg_reason.setWordWrap(True)
         self._dbg_reason.setStyleSheet(
@@ -230,9 +234,8 @@ class ScanningScreen(QWidget):
             Qt.TransformationMode.SmoothTransformation,
         )
         self._preview.setPixmap(scaled)
-        # Keep live pane in debug view in sync
         self._dbg_live.setPixmap(
-            pixmap.scaled(_DBG_W, _DBG_H, Qt.AspectRatioMode.KeepAspectRatio,
+            pixmap.scaled(self._dbg_live.size(), Qt.AspectRatioMode.KeepAspectRatio,
                           Qt.TransformationMode.SmoothTransformation)
         )
         if card_detected:
@@ -243,8 +246,14 @@ class ScanningScreen(QWidget):
             self._status_label.setStyleSheet("font-size: 16px; font-weight: bold; color: orange;")
 
     def _on_debug_frame(self, edges_px: QPixmap, contours_px: QPixmap, rejection: str) -> None:
-        self._dbg_edges.setPixmap(edges_px)
-        self._dbg_contours.setPixmap(contours_px)
+        self._dbg_edges.setPixmap(
+            edges_px.scaled(self._dbg_edges.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                            Qt.TransformationMode.SmoothTransformation)
+        )
+        self._dbg_contours.setPixmap(
+            contours_px.scaled(self._dbg_contours.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                               Qt.TransformationMode.SmoothTransformation)
+        )
         detected = not rejection
         self._dbg_reason.setText("✓ Card detected" if detected else rejection)
         color = "#4caf50" if detected else "#ff9800"
