@@ -1,0 +1,213 @@
+[
+  {
+    "nfl": "Arizona Cardinals",
+    "mlb": "Arizona Diamondbacks",
+    "nba": "Phoenix Suns",
+    "nhl": "Arizona Coyotes",
+    "soccer": "Juventus"
+  },
+  {
+    "nfl": "Atlanta Falcons",
+    "mlb": "Atlanta Braves",
+    "nba": "Atlanta Hawks",
+    "nhl": "Calgary Flames",
+    "soccer": "Manchester United"
+  },
+  {
+    "nfl": "Baltimore Ravens",
+    "mlb": "Baltimore Orioles",
+    "nba": "Sacramento Kings",
+    "nhl": "New Jersey Devils"
+  },
+  {
+    "nfl": "Buffalo Bills",
+    "nhl": "Buffalo Sabres",
+    "nba": "Toronto Raptors",
+    "mlb": "Toronto Blue Jays",
+    "soccer": "Rangers FC"
+  },
+  {
+    "nfl": "Carolina Panthers",
+    "nba": "Charlotte Hornets",
+    "nhl": "Carolina Hurricanes",
+    "soccer": "Borussia Dortmund"
+  },
+  {
+    "nfl": "Chicago Bears",
+    "mlb": "Chicago Cubs",
+    "nba": "Chicago Bulls",
+    "nhl": "Chicago Blackhawks"
+  },
+  {
+    "nfl": "Cincinnati Bengals",
+    "mlb": "Cincinnati Reds",
+    "nhl": "Winnipeg Jets",
+    "soccer": "AC Milan"
+  },
+  {
+    "nfl": "Cleveland Browns",
+    "mlb": "Cleveland Guardians",
+    "nba": "Cleveland Cavaliers",
+    "nhl": "Columbus Blue Jackets",
+    "soccer": "Chelsea FC"
+  },
+  {
+    "nfl": "Dallas Cowboys",
+    "mlb": "Texas Rangers",
+    "nba": "Dallas Mavericks",
+    "nhl": "Dallas Stars"
+  },
+  {
+    "nfl": "Denver Broncos",
+    "mlb": "Colorado Rockies",
+    "nba": "Denver Nuggets",
+    "nhl": "Colorado Avalanche",
+    "soccer": "FC Bayern Munchen"
+  },
+  {
+    "nfl": "Detroit Lions",
+    "mlb": "Detroit Tigers",
+    "nba": "Detroit Pistons",
+    "nhl": "Detroit Red Wings"
+  },
+  {
+    "nfl": "Green Bay Packers",
+    "mlb": "Milwaukee Brewers",
+    "nba": "Milwaukee Bucks",
+    "nhl": "Vancouver Canucks"
+  },
+  {
+    "nfl": "Houston Texans",
+    "mlb": "Houston Astros",
+    "nba": "Houston Rockets",
+    "nhl": "Toronto Maple Leafs"
+  },
+  {
+    "nfl": "Indianapolis Colts",
+    "nba": "Indiana Pacers",
+    "mlb": "Chicago White Sox",
+    "nhl": "Ottawa Senators"
+  },
+  {
+    "nfl": "Jacksonville Jaguars",
+    "mlb": "San Diego Padres",
+    "nhl": "Edmonton Oilers",
+    "soccer": "Liverpool FC"
+  },
+  {
+    "nfl": "Kansas City Chiefs",
+    "mlb": "Kansas City Royals",
+    "nba": "Oklahoma City Thunder",
+    "nhl": "St. Louis Blues"
+  },
+  {
+    "nfl": "Las Vegas Raiders",
+    "nhl": "Vegas Golden Knights",
+    "nba": "Utah Jazz",
+    "mlb": "Athletics",
+    "soccer": "FC Barcelona"
+  },
+  {
+    "nfl": "Los Angeles Chargers",
+    "mlb": "Los Angeles Dodgers",
+    "nba": "Los Angeles Clippers",
+    "nhl": "Los Angeles Kings",
+    "soccer": "Olympique de Marselle"
+  },
+  {
+    "nfl": "Los Angeles Rams",
+    "mlb": "Los Angeles Angels",
+    "nba": "Los Angeles Lakers",
+    "nhl": "Anaheim Ducks"
+  },
+  {
+    "nfl": "Miami Dolphins",
+    "mlb": "Miami Marlins",
+    "nba": "Miami Heat",
+    "nhl": "Florida Panthers",
+    "soccer": "FC Internazionale Milano"
+  },
+  {
+    "nfl": "Minnesota Vikings",
+    "mlb": "Minnesota Twins",
+    "nba": "Minnesota Timberwolves",
+    "nhl": "Minnesota Wild"
+  },
+  {
+    "nfl": "New England Patriots",
+    "mlb": "Boston Red Sox",
+    "nba": "Boston Celtics",
+    "nhl": "Boston Bruins"
+  },
+  {
+    "nfl": "New Orleans Saints",
+    "nba": "New Orleans Pelicans",
+    "nhl": "Montreal Canadiens",
+    "soccer": "Real Madrid FC"
+  },
+  {
+    "nfl": "New York Giants",
+    "mlb": "New York Yankees",
+    "nba": "New York Knicks",
+    "nhl": "New York Rangers"
+  },
+  {
+    "nfl": "New York Jets",
+    "mlb": "New York Mets",
+    "nba": "Brooklyn Nets",
+    "nhl": "New Jersey Devils",
+    "soccer": "Paris Saint-Germain"
+  },
+  {
+    "nfl": "Philadelphia Eagles",
+    "mlb": "Philadelphia Phillies",
+    "nba": "Philadelphia 76ers",
+    "nhl": "Philadelphia Flyers",
+    "soccer": "FC Salzburg"
+  },
+  {
+    "nfl": "Pittsburgh Steelers",
+    "mlb": "Pittsburgh Pirates",
+    "nhl": "Pittsburgh Penguins",
+    "nba": "San Antonio Spurs"
+  },
+  {
+    "nfl": "San Francisco 49ers",
+    "mlb": "San Francisco Giants",
+    "nba": "Golden State Warriors",
+    "nhl": "San Jose Sharks"
+  },
+  {
+    "nfl": "Seattle Seahawks",
+    "mlb": "Seattle Mariners",
+    "nhl": "Seattle Kraken",
+    "nba": "Portland Trail Blazers",
+    "soccer": "Celtic FC"
+  },
+  {
+    "nfl": "Tampa Bay Buccaneers",
+    "mlb": "Tampa Bay Rays",
+    "nba": "Orlando Magic",
+    "nhl": "Tampa Bay Lightning",
+    "soccer": "Tottenham Hotspur"
+  },
+  {
+    "nfl": "Tennessee Titans",
+    "nhl": "Nashville Predators",
+    "nba": "Memphis Grizzlies",
+    "mlb": "St. Louis Cardinals",
+    "soccer": "Atletico de Madrid"
+  },
+  {
+    "nfl": "Washington Commanders",
+    "mlb": "Washington Nationals",
+    "nba": "Washington Wizards",
+    "nhl": "Washington Capitals"
+  },
+  {
+    "nfl": "Miscellaneous",
+    "mlb": "Miscellaneous",
+    "nba": "Miscellaneous",
+    "nhl": "Miscellaneous"
+  }
+]

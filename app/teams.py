@@ -1,13 +1,34 @@
-TEAMS: list[str] = sorted([
-    "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens",
-    "Buffalo Bills", "Carolina Panthers", "Chicago Bears",
-    "Cincinnati Bengals", "Cleveland Browns", "Dallas Cowboys",
-    "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars",
-    "Kansas City Chiefs", "Las Vegas Raiders", "Los Angeles Chargers",
-    "Los Angeles Rams", "Miami Dolphins", "Miscellaneous", "Minnesota Vikings",
-    "New England Patriots", "New Orleans Saints", "New York Giants",
-    "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers",
-    "San Francisco 49ers", "Seattle Seahawks", "Tampa Bay Buccaneers",
-    "Tennessee Titans", "Washington Commanders",
-])
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from app import config
+
+_DEFAULT_JSON = Path(__file__).parent.parent / "teams.json"
+_USER_JSON = config.DATA_DIR / "teams.json"
+
+
+def _load_json(path: Path) -> tuple[list[dict], Path] | None:
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    markets = [m for m in data if isinstance(m, dict) and "nfl" in m]
+    return (markets, path.parent) if markets else None
+
+
+def _load_markets() -> tuple[list[dict], Path]:
+    return (
+        _load_json(_USER_JSON)
+        or _load_json(_DEFAULT_JSON)
+        or ([], Path(__file__).parent.parent)
+    )
+
+
+MARKETS: list[dict]
+ICONS_BASE: Path
+MARKETS, ICONS_BASE = _load_markets()
+
+SPORTS: list[str] = ["nfl"] + sorted({
+    k for m in MARKETS for k in m if k != "nfl"
+})
