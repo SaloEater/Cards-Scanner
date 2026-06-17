@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 import numpy as np
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
@@ -144,6 +145,28 @@ class ScanningScreen(QWidget):
         )
         right.addWidget(self._canny_high_slider)
 
+        self._stab_buf_label = QLabel(f"Stab buffer: {config.STABILIZER_BUFFER}")
+        right.addWidget(self._stab_buf_label)
+        self._stab_buf_slider = QSlider(Qt.Orientation.Horizontal)
+        self._stab_buf_slider.setRange(1, 30)
+        self._stab_buf_slider.setValue(config.STABILIZER_BUFFER)
+        self._stab_buf_slider.valueChanged.connect(self._on_stab_buf_changed)
+        self._stab_buf_slider.sliderReleased.connect(
+            lambda: config.save("STABILIZER_BUFFER", str(self._stab_buf_slider.value()))
+        )
+        right.addWidget(self._stab_buf_slider)
+
+        self._stab_miss_label = QLabel(f"Stab miss reset: {config.STABILIZER_MISS_RESET}")
+        right.addWidget(self._stab_miss_label)
+        self._stab_miss_slider = QSlider(Qt.Orientation.Horizontal)
+        self._stab_miss_slider.setRange(1, 120)
+        self._stab_miss_slider.setValue(config.STABILIZER_MISS_RESET)
+        self._stab_miss_slider.valueChanged.connect(self._on_stab_miss_changed)
+        self._stab_miss_slider.sliderReleased.connect(
+            lambda: config.save("STABILIZER_MISS_RESET", str(self._stab_miss_slider.value()))
+        )
+        right.addWidget(self._stab_miss_slider)
+
         self._debug_btn = QPushButton("Debug")
         self._debug_btn.setCheckable(True)
         self._debug_btn.toggled.connect(self._on_debug_toggled)
@@ -278,6 +301,15 @@ class ScanningScreen(QWidget):
     def _on_canny_high_changed(self, value: int) -> None:
         self._canny_high_label.setText(f"Canny high: {value}")
         self._detector.canny_high = value
+
+    def _on_stab_buf_changed(self, value: int) -> None:
+        self._stab_buf_label.setText(f"Stab buffer: {value}")
+        self._detector.stabilizer_buffer = value
+        self._detector._buffer = deque(self._detector._buffer, maxlen=value)
+
+    def _on_stab_miss_changed(self, value: int) -> None:
+        self._stab_miss_label.setText(f"Stab miss reset: {value}")
+        self._detector.stabilizer_miss_reset = value
 
     def _rotate_cw(self) -> None:
         self._rotation = (self._rotation + 90) % 360

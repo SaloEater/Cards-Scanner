@@ -22,7 +22,9 @@ class CardDetector:
     def __init__(self) -> None:
         self.canny_low: int = config.CANNY_LOW
         self.canny_high: int = config.CANNY_HIGH
-        self._buffer: deque = deque(maxlen=config.STABILIZER_BUFFER)
+        self.stabilizer_buffer: int = config.STABILIZER_BUFFER
+        self.stabilizer_miss_reset: int = config.STABILIZER_MISS_RESET
+        self._buffer: deque = deque(maxlen=self.stabilizer_buffer)
         self._miss_count: int = 0
         self._stable_bounds: np.ndarray | None = None
 
@@ -67,7 +69,7 @@ class CardDetector:
             self._stable_bounds = np.mean(np.stack(list(self._buffer)), axis=0)
         else:
             self._miss_count += 1
-            if self._miss_count >= config.STABILIZER_MISS_RESET:
+            if self._miss_count >= self.stabilizer_miss_reset:
                 self._buffer.clear()
                 self._stable_bounds = None
                 self._miss_count = 0

@@ -120,6 +120,18 @@ class ReviewScreen(QWidget):
         QShortcut(QKeySequence(Qt.Key.Key_Down),  self).activated.connect(lambda: self._move_selection(1, 0))
         QShortcut(QKeySequence(Qt.Key.Key_Up),    self).activated.connect(lambda: self._move_selection(-1, 0))
 
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if not self._options:
+            return
+        # Two rows of cells should fill 80% of window height; keep cells square
+        cell_h = int((self.height() * 0.80 - 8) / 2)
+        cell_w = int((self.width() - 8) / 2)
+        cell_size = max(80, min(cell_h, cell_w))
+        for opt in self._options:
+            opt.setFixedSize(cell_size, cell_size)
+        self._update_previews()
+
     def load(self, series: Series, cropped_bgr: np.ndarray) -> None:
         self._series = series
         self._cropped_bgr = cropped_bgr

@@ -135,7 +135,7 @@ def main() -> None:
     app.setApplicationName("Card Scanner")
     window = MainWindow()
     app.aboutToQuit.connect(window._camera.stop)
-    window.showFullScreen()
+    window.show()
     sys.exit(app.exec())
 
 
