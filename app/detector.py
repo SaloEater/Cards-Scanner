@@ -95,17 +95,25 @@ class CardDetector:
             return warped
 
         fh, fw = bgr.shape[:2]
-        card_ratio = out_h / out_w  # 1.40
-        if fw / fh > 1 / card_ratio:
+        card_ratio = config.CARD_ASPECT_TARGET  # tall side / short side
+        if fw >= fh:
             crop_h = fh
             crop_w = int(fh / card_ratio)
         else:
             crop_w = fw
             crop_h = int(fw * card_ratio)
+        crop_w = min(crop_w, fw)
+        crop_h = min(crop_h, fh)
         x0 = (fw - crop_w) // 2
         y0 = (fh - crop_h) // 2
         center = bgr[y0:y0 + crop_h, x0:x0 + crop_w]
-        return cv2.resize(center, (out_w, out_h))
+        max_side = config.CARD_OUTPUT_H
+        scale = max_side / max(crop_w, crop_h)
+        return cv2.resize(
+            center,
+            (int(crop_w * scale), int(crop_h * scale)),
+            interpolation=cv2.INTER_AREA,
+        )
 
     def detect_debug(
         self, bgr: np.ndarray
