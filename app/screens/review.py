@@ -67,7 +67,7 @@ class RotationOption(QLabel):
 
 class ReviewScreen(QWidget):
     navigate_to_scanning = Signal(object)         # Series
-    navigate_to_team_selection = Signal(object, object, str)  # (Series, final_bgr ndarray, name)
+    navigate_to_team_selection = Signal(object, object, str, str)  # (Series, final_bgr, name, price)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -93,11 +93,21 @@ class ReviewScreen(QWidget):
             grid.addWidget(opt, row, col)
         layout.addLayout(grid)
 
+        inputs_row = QHBoxLayout()
+        inputs_row.setSpacing(8)
+
         self._name_edit = QLineEdit()
         self._name_edit.setPlaceholderText("Card name (optional)…")
-        self._name_edit.setMaximumWidth(416)
         self._name_edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        layout.addWidget(self._name_edit, alignment=Qt.AlignmentFlag.AlignCenter)
+        inputs_row.addWidget(self._name_edit)
+
+        self._price_edit = QLineEdit()
+        self._price_edit.setPlaceholderText("Price (optional)…")
+        self._price_edit.setMaximumWidth(140)
+        self._price_edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        inputs_row.addWidget(self._price_edit)
+
+        layout.addLayout(inputs_row)
 
         action_row = QHBoxLayout()
         approve_btn = QPushButton("Approve  [Enter]")
@@ -137,6 +147,7 @@ class ReviewScreen(QWidget):
         self._cropped_bgr = cropped_bgr
         self._selected = 0
         self._name_edit.clear()
+        self._price_edit.clear()
         self._error_label.hide()
         self._update_previews()
         self._update_selection()
@@ -177,7 +188,8 @@ class ReviewScreen(QWidget):
         rot = _CV_ROTATIONS[self._selected]
         final = cv2.rotate(self._cropped_bgr, rot) if rot is not None else self._cropped_bgr
         name = self._name_edit.text().strip()
-        self.navigate_to_team_selection.emit(self._series, final, name)
+        price = self._price_edit.text().strip()
+        self.navigate_to_team_selection.emit(self._series, final, name, price)
 
     def _on_retake(self) -> None:
         if self._series is not None:

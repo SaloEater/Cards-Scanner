@@ -31,7 +31,7 @@ class UploadWorker(QThread):
             self.progress.emit(i, total)
             path = config.DATA_DIR / self._series.series_id / photo.filename
             try:
-                backend.upload_photo(self._series.series_id, path, photo.name, photo.team)
+                backend.upload_photo(self._series.series_id, path, photo.name, photo.team, photo.price)
             except Exception as e:
                 self.upload_error.emit(str(e))
                 return

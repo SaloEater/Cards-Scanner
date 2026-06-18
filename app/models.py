@@ -12,6 +12,7 @@ class Photo:
     name: str
     uploaded: bool = False
     team: str = ""
+    price: str = ""
 
 
 @dataclass

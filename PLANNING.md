@@ -29,7 +29,8 @@ Launch
   │     └─ Discard → Create Series
   └─ no incomplete series → Create Series
         └─ [Create Series] → Scanning
-              └─ [Capture] → Assign team
+              └─ [Capture] → Assign name/price
+                  └─ [Assign name/price] → Assign team
                     └─ [Assign team] → Review
                           ├─ [Approve] → Scanning (loop)
                           └─ [Retake]  → Scanning (loop)
@@ -77,6 +78,7 @@ Card text extraction (planned, **not implemented yet**):
   > **Not implemented yet:** OCR is not running, so the field is always blank. The field is present in the UI so the operator can type a name manually if they choose.
 - **"Approve"** button: writes cropped image to `~/.card-scanner/<series-id>/<index>.jpg`, appends entry to `state-<series-id>.json` (including `name`, even if empty), goes to Assign Team screen.
 - **"Retake"** button: discards the frame, returns to Scanning without writing anything.
+- **Price field:** editable text input for optional price, value is stored in `state-<series-id>.json`.
 
 ### Screen 4.1 - Assign team
 
