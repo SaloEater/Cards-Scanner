@@ -139,11 +139,7 @@ class ThumbnailGridScreen(QWidget):
         self._series = series
         self._name_edit.setText(series.series_name)
         self._count_label.setText(f"{len(series.photos)} card{'s' if len(series.photos) != 1 else ''}")
-        uploaded = series.status == "uploaded"
-        uploading = series.status == "uploading"
-        self._add_more_btn.setEnabled(not uploaded and not uploading)
-        self._send_btn.setEnabled(not uploaded)
-        if uploaded:
+        if series.status == "uploaded":
             self._status_label.setText("Uploaded")
             self._status_label.show()
         else:
@@ -200,6 +196,10 @@ class ThumbnailGridScreen(QWidget):
 
     def _on_add_more(self) -> None:
         if self._series is not None:
+            if self._series.status in ("uploaded", "uploading"):
+                self._series.status = "pending"
+                state.save_series(self._series)
+                self._status_label.hide()
             self.navigate_to_scanning.emit(self._series)
 
     def _on_send(self) -> None:
