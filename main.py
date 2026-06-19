@@ -15,6 +15,7 @@ from app.screens.scanning import ScanningScreen
 from app.screens.team_selection import TeamSelectionScreen
 from app.screens.thumbnail_grid import ThumbnailGridScreen
 from app.screens.upload_progress import UploadProgressScreen
+from app.spreadsheet import get_provider
 
 LAUNCH_IDX = 0
 CREATE_IDX = 1
@@ -39,10 +40,12 @@ class MainWindow(QMainWindow):
         self._stack = QStackedWidget()
         self.setCentralWidget(self._stack)
 
+        provider = get_provider()
+
         self._launch = LaunchScreen()
-        self._create = CreateSeriesScreen()
+        self._create = CreateSeriesScreen(provider=provider)
         self._scanning = ScanningScreen(camera_worker=self._camera, detector=detector)
-        self._review = ReviewScreen()
+        self._review = ReviewScreen(provider=provider)
         self._team_selection = TeamSelectionScreen()
         self._thumbnail = ThumbnailGridScreen()
         self._upload_progress = UploadProgressScreen()
