@@ -21,6 +21,7 @@ class Series:
     series_name: str
     status: Literal["scanning", "ready", "uploading", "uploaded"]
     photos: list[Photo] = field(default_factory=list)
+    total_cards: int = 0
 
     @classmethod
     def from_dict(cls, d: dict) -> Series:
@@ -32,6 +33,7 @@ class Series:
             series_name=d["series_name"],
             status=d["status"],
             photos=photos,
+            total_cards=d.get("total_cards", 0),
         )
 
     def to_dict(self) -> dict:

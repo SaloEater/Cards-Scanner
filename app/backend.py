@@ -17,8 +17,8 @@ def _post(path: str, body: dict) -> dict:
         return payload.get("data") or {}
 
 
-def create_series(name: str) -> dict:
-    return _post("/api/series/create", {"name": name})
+def create_series(name: str, total_cards: int = 0) -> dict:
+    return _post("/api/series/create", {"name": name, "total_cards": total_cards})
 
 
 def upload_photo(series_id: str, filepath: Path, name: str, team: str = "", price: str = "") -> dict:
