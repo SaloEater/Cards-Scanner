@@ -44,7 +44,7 @@ STABILIZER_BUFFER: int = _int("STABILIZER_BUFFER", 10)
 STABILIZER_MISS_RESET: int = _int("STABILIZER_MISS_RESET", 100)
 
 EXCEL_FILE_URL: str      = _str("EXCEL_FILE_URL", "")
-EXCEL_CLIENT_ID: str     = _str("EXCEL_CLIENT_ID", "")
+EXCEL_CLIENT_ID: str     = _str("EXCEL_CLIENT_ID", "9f92e623-0c12-421b-9ad6-96a86da46644")
 EXCEL_TENANT_ID: str     = _str("EXCEL_TENANT_ID", "consumers")
 EXCEL_SHEET: str         = _str("EXCEL_SHEET", "")
 EXCEL_SERIES_COLUMN: str = _str("EXCEL_SERIES_COLUMN", "")
