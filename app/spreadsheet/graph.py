@@ -78,11 +78,35 @@ def _detect_tenant(file_url: str, configured: str) -> str:
     return configured or "consumers"
 
 
+_ONEDRIVE_VIEWER_RE = re.compile(
+    r"^https?://onedrive\.live\.com/:[a-z]+:/g/personal/([0-9a-fA-F]+)/([^?#]+)",
+    re.IGNORECASE,
+)
+
+
+def _normalize_sharing_url(url: str) -> str:
+    """Convert full OneDrive viewer URL to 1drv.ms sharing link.
+
+    Graph's /shares API only accepts 1drv.ms links, not the
+    onedrive.live.com/:x:/g/personal/ viewer URLs.
+    """
+    m = _ONEDRIVE_VIEWER_RE.match(url)
+    if m:
+        normalized = f"https://1drv.ms/x/c/{m.group(1)}/{m.group(2)}"
+        print(f"[Graph] normalized viewer URL → {normalized!r}")
+        return normalized
+    return url
+
+
 def _encode_sharing_url(url: str) -> str:
     url = url.strip()
+    # Strip query params / fragment, then normalize viewer URLs to 1drv.ms form
+    parsed = urlparse(url)
+    url = parsed._replace(query="", fragment="").geturl()
+    url = _normalize_sharing_url(url)
     encoded = base64.urlsafe_b64encode(url.encode("utf-8")).rstrip(b"=").decode()
     token = f"u!{encoded}"
-    print(f"[Graph] sharing URL (first 60 chars): {url[:60]!r}")
+    print(f"[Graph] sharing URL: {url!r}")
     print(f"[Graph] sharing token: {token}")
     return token
 
