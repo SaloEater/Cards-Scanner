@@ -79,8 +79,12 @@ def _detect_tenant(file_url: str, configured: str) -> str:
 
 
 def _encode_sharing_url(url: str) -> str:
-    encoded = base64.urlsafe_b64encode(url.encode()).rstrip(b"=").decode()
-    return f"u!{encoded}"
+    url = url.strip()
+    encoded = base64.urlsafe_b64encode(url.encode("utf-8")).rstrip(b"=").decode()
+    token = f"u!{encoded}"
+    print(f"[Graph] sharing URL (first 60 chars): {url[:60]!r}")
+    print(f"[Graph] sharing token: {token}")
+    return token
 
 
 class GraphSpreadsheetProvider(SpreadsheetProvider):
@@ -91,7 +95,7 @@ class GraphSpreadsheetProvider(SpreadsheetProvider):
         tenant_id: str,
         cache_path: Path,
     ) -> None:
-        self._file_url = file_url
+        self._file_url = file_url.strip()
         self._cache_path = cache_path
 
         self._token_cache = msal.SerializableTokenCache()
