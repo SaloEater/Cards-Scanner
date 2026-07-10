@@ -4,6 +4,7 @@ from PySide6.QtCore import QThread, Qt, Signal
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
     QComboBox,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -25,15 +26,16 @@ class _CreateWorker(QThread):
     succeeded = Signal(object)  # Series
     failed = Signal(str)
 
-    def __init__(self, name: str, total_cards: int, parent=None) -> None:
+    def __init__(self, name: str, total_cards: int, default_price: str = "", parent=None) -> None:
         super().__init__(parent)
         self._name = name
         self._total_cards = total_cards
+        self._default_price = default_price
 
     def run(self) -> None:
         try:
-            result = backend.create_series(self._name, self._total_cards)
-            series = state.create_series(self._name, series_id=str(result["id"]), total_cards=self._total_cards)
+            result = backend.create_series(self._name, self._total_cards, self._default_price)
+            series = state.create_series(self._name, series_id=str(result["id"]), total_cards=self._total_cards, default_price=self._default_price)
         except Exception as e:
             print(f"[CreateWorker] error:\n{traceback.format_exc()}")
             self.failed.emit(str(e))
@@ -147,6 +149,32 @@ class CreateSeriesScreen(QWidget):
         self._total_cards_edit.returnPressed.connect(self._on_create)
         layout.addWidget(self._total_cards_edit, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        price_label = QLabel("Side Cards Price")
+        price_label.setMaximumWidth(360)
+        layout.addWidget(price_label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        price_row = QHBoxLayout()
+        price_row.setSpacing(6)
+        self._price_from_edit = QLineEdit()
+        self._price_from_edit.setPlaceholderText("From $")
+        self._price_from_edit.setMaximumWidth(120)
+        self._price_from_edit.setValidator(QIntValidator(0, 999999, self))
+        self._price_from_edit.returnPressed.connect(self._on_create)
+        price_row.addWidget(self._price_from_edit)
+        price_sep = QLabel("-")
+        price_sep.setStyleSheet("font-size: 16px;")
+        price_row.addWidget(price_sep)
+        self._price_to_edit = QLineEdit()
+        self._price_to_edit.setPlaceholderText("To $")
+        self._price_to_edit.setMaximumWidth(120)
+        self._price_to_edit.setValidator(QIntValidator(0, 999999, self))
+        self._price_to_edit.returnPressed.connect(self._on_create)
+        price_row.addWidget(self._price_to_edit)
+        price_row_widget = QWidget()
+        price_row_widget.setLayout(price_row)
+        price_row_widget.setMaximumWidth(360)
+        layout.addWidget(price_row_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+
         self._create_btn = QPushButton("Create Series")
         self._create_btn.setMaximumWidth(200)
         self._create_btn.clicked.connect(self._on_create)
@@ -161,6 +189,8 @@ class CreateSeriesScreen(QWidget):
         super().showEvent(event)
         self._name_edit.clear()
         self._total_cards_edit.clear()
+        self._price_from_edit.clear()
+        self._price_to_edit.clear()
         self._error_label.hide()
         self._create_btn.setText("Create Series")
         self._create_btn.setEnabled(True)
@@ -247,10 +277,22 @@ class CreateSeriesScreen(QWidget):
             self._error_label.show()
             return
         total_cards = int(total_str)
+        price_from = self._price_from_edit.text().strip()
+        price_to = self._price_to_edit.text().strip()
+        if price_to and not price_from:
+            self._error_label.setText("Fill the 'From' field or leave both empty.")
+            self._error_label.show()
+            return
+        if price_from and price_to:
+            default_price = f"${price_from}-${price_to}"
+        elif price_from:
+            default_price = f"${price_from}"
+        else:
+            default_price = ""
         self._error_label.hide()
         self._create_btn.setEnabled(False)
         self._create_btn.setText("Creating…")
-        worker = _CreateWorker(name, total_cards, parent=self)
+        worker = _CreateWorker(name, total_cards, default_price, parent=self)
         worker.succeeded.connect(self.navigate_to_scanning)
         worker.failed.connect(self._on_failed)
         self._worker = worker

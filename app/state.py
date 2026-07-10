@@ -17,10 +17,10 @@ def _tmp_path(series_id: str) -> Path:
     return config.DATA_DIR / f"state-{series_id}.tmp"
 
 
-def create_series(name: str, series_id: str | None = None, total_cards: int = 0) -> Series:
+def create_series(name: str, series_id: str | None = None, total_cards: int = 0, default_price: str = "") -> Series:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     sid = series_id if series_id is not None else uuid4().hex[:8]
-    series = Series(series_id=sid, series_name=name, status="scanning", total_cards=total_cards)
+    series = Series(series_id=sid, series_name=name, status="scanning", total_cards=total_cards, default_price=default_price)
     save_series(series)
     return series
 
