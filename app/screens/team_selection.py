@@ -46,6 +46,7 @@ class TeamSelectionScreen(QWidget):
         self._final_bgr: np.ndarray | None = None
         self._name: str = ""
         self._price: str = ""
+        self._rotation: int = 0
         self._active_sport: str = "nfl"
         self._sport_btns: dict[str, QPushButton] = {}
         self._build_ui()
@@ -118,11 +119,19 @@ class TeamSelectionScreen(QWidget):
                 item.setIcon(icon)
             self._list.addItem(item)
 
-    def load(self, series: Series, final_bgr: np.ndarray, name: str, price: str = "") -> None:
+    def load(
+        self,
+        series: Series,
+        final_bgr: np.ndarray,
+        name: str,
+        price: str = "",
+        rotation: int = 0,
+    ) -> None:
         self._series = series
         self._final_bgr = final_bgr
         self._name = name
         self._price = price
+        self._rotation = rotation
         self._error_label.hide()
         self._list.clearSelection()
 
@@ -143,7 +152,14 @@ class TeamSelectionScreen(QWidget):
             self._error_label.show()
             return
         self._series.photos.append(
-            Photo(index=index, filename=filename, name=self._name, team=team, price=self._price)
+            Photo(
+                index=index,
+                filename=filename,
+                name=self._name,
+                team=team,
+                price=self._price,
+                rotation=self._rotation,
+            )
         )
         state.save_series(self._series)
         self.navigate_to_scanning.emit(self._series)

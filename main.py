@@ -103,9 +103,11 @@ class MainWindow(QMainWindow):
         self._review.load(series, cropped_bgr)
         self._stack.setCurrentIndex(REVIEW_IDX)
 
-    def _on_to_team_selection(self, series: Series, final_bgr: np.ndarray, name: str, price: str) -> None:
+    def _on_to_team_selection(
+        self, series: Series, original_bgr: np.ndarray, name: str, price: str, rotation: int
+    ) -> None:
         self._current_series = series
-        self._team_selection.load(series, final_bgr, name, price)
+        self._team_selection.load(series, original_bgr, name, price, rotation)
         self._stack.setCurrentIndex(TEAM_IDX)
 
     def _on_approved_or_retaken(self, series: Series) -> None:

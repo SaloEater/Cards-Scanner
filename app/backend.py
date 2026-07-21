@@ -21,12 +21,20 @@ def create_series(name: str, total_cards: int = 0, default_price: str = "") -> d
     return _post("/api/series/create", {"name": name, "total_cards": total_cards, "default_price": default_price})
 
 
-def upload_photo(series_id: str, filepath: Path, name: str, team: str = "", price: str = "") -> dict:
+def upload_photo(
+    series_id: str, filepath: Path, name: str, team: str = "", price: str = "", rotation: int = 0
+) -> dict:
     with httpx.Client(base_url=config.BACKEND_URL, timeout=60) as c:
         with open(filepath, "rb") as f:
             r = c.post(
                 "/api/photo/upload",
-                data={"series_id": series_id, "name": name, "team": team, "price": price},
+                data={
+                    "series_id": series_id,
+                    "name": name,
+                    "team": team,
+                    "price": price,
+                    "rotation": str(rotation),
+                },
                 files={"file": (filepath.name, f, "image/jpeg")},
             )
         r.raise_for_status()

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import cv2
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QImage, QKeySequence, QPixmap, QShortcut
+from PySide6.QtGui import QImage, QKeySequence, QPixmap, QShortcut, QTransform
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -23,7 +23,7 @@ _THUMB_W, _THUMB_H = 150, 210
 _COLUMNS = 4
 
 
-def _load_thumb(path: Path) -> QPixmap | None:
+def _load_thumb(path: Path, rotation: int = 0) -> QPixmap | None:
     bgr = cv2.imread(str(path))
     if bgr is None:
         return None
@@ -31,6 +31,8 @@ def _load_thumb(path: Path) -> QPixmap | None:
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
     img = QImage(rgb.data, w, h, w * ch, QImage.Format.Format_RGB888)
     pixmap = QPixmap.fromImage(img.copy())
+    if rotation:
+        pixmap = pixmap.transformed(QTransform().rotate(rotation), Qt.TransformationMode.SmoothTransformation)
     return pixmap.scaled(_THUMB_W, _THUMB_H, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
 
@@ -158,7 +160,7 @@ class ThumbnailGridScreen(QWidget):
         for i, photo in enumerate(self._series.photos):
             row, col = divmod(i, _COLUMNS)
             img_path = config.DATA_DIR / self._series.series_id / photo.filename
-            card = ThumbnailCard(pixmap=_load_thumb(img_path), uploaded=photo.uploaded)
+            card = ThumbnailCard(pixmap=_load_thumb(img_path, photo.rotation), uploaded=photo.uploaded)
             card.remove_requested.connect(lambda checked=False, idx=i: self._remove_photo(idx))
             self._grid.addWidget(card, row, col)
 

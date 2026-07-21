@@ -13,6 +13,7 @@ class Photo:
     uploaded: bool = False
     team: str = ""
     price: str = ""
+    rotation: int = 0  # display-only rotation in degrees clockwise (0/90/180/270); file on disk stays unrotated
 
 
 @dataclass

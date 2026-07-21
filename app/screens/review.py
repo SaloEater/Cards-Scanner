@@ -31,6 +31,15 @@ _CV_ROTATIONS = [
     cv2.ROTATE_90_COUNTERCLOCKWISE,
 ]
 
+# Degrees CLOCKWISE that displaying the (never-rotated) original image would need
+# in order to look like the corresponding _CV_ROTATIONS preview, in the same index
+# order as _CV_ROTATIONS above:
+#   None                        -> 0
+#   cv2.ROTATE_90_CLOCKWISE     -> 90
+#   cv2.ROTATE_180              -> 180
+#   cv2.ROTATE_90_COUNTERCLOCKWISE -> 270  (a CCW pixel rotation == displaying at 270° CW)
+_ROTATION_DEGREES = [0, 90, 180, 270]
+
 
 def _bgr_to_pixmap(bgr: np.ndarray) -> QPixmap:
     h, w, ch = bgr.shape
@@ -123,7 +132,7 @@ class _LoadColumnsWorker(QThread):
 
 class ReviewScreen(QWidget):
     navigate_to_scanning = Signal(object)         # Series
-    navigate_to_team_selection = Signal(object, object, str, str)  # (Series, final_bgr, name, price)
+    navigate_to_team_selection = Signal(object, object, str, str, int)  # (Series, original_bgr, name, price, rotation_deg)
 
     def __init__(self, provider: SpreadsheetProvider | None = None, parent=None) -> None:
         super().__init__(parent)
@@ -359,11 +368,11 @@ class ReviewScreen(QWidget):
     def _on_approve(self) -> None:
         if self._series is None or self._cropped_bgr is None:
             return
-        rot = _CV_ROTATIONS[self._selected]
-        final = cv2.rotate(self._cropped_bgr, rot) if rot is not None else self._cropped_bgr
+        rotation_deg = _ROTATION_DEGREES[self._selected]
         name = self._name_edit.text().strip()
         price = self._price_edit.text().strip()
-        self.navigate_to_team_selection.emit(self._series, final, name, price)
+        # Save/upload the ORIGINAL (unrotated) pixels; the chosen rotation travels as metadata.
+        self.navigate_to_team_selection.emit(self._series, self._cropped_bgr, name, price, rotation_deg)
 
     def _on_retake(self) -> None:
         if self._series is not None:
