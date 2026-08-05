@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app import config, state
+from app import config, state, thumbnail
 from app.models import Photo, Series
 from app.teams import ICONS_BASE, MARKETS, SPORTS
 
@@ -47,6 +47,7 @@ class TeamSelectionScreen(QWidget):
         self._name: str = ""
         self._price: str = ""
         self._rotation: int = 0
+        self._vivid_line: float = 0.15
         self._active_sport: str = "nfl"
         self._sport_btns: dict[str, QPushButton] = {}
         self._build_ui()
@@ -126,12 +127,14 @@ class TeamSelectionScreen(QWidget):
         name: str,
         price: str = "",
         rotation: int = 0,
+        vivid_line: float = 0.15,
     ) -> None:
         self._series = series
         self._final_bgr = final_bgr
         self._name = name
         self._price = price
         self._rotation = rotation
+        self._vivid_line = vivid_line
         self._error_label.hide()
         self._list.clearSelection()
 
@@ -151,6 +154,29 @@ class TeamSelectionScreen(QWidget):
             self._error_label.setText(f"Failed to save {series_dir / filename}")
             self._error_label.show()
             return
+
+        thumb_filename = ""
+        try:
+            thumb = thumbnail.generate_thumbnail(
+                self._final_bgr,
+                self._vivid_line,
+                config.THUMB_BOX_W,
+                config.THUMB_BOX_H,
+                config.VIVID_SATURATION,
+                config.VIVID_FEATHER_PX,
+            )
+            candidate_filename = f"{index}_thumb.jpg"
+            thumb_ok = cv2.imwrite(
+                str(series_dir / candidate_filename), thumb,
+                [cv2.IMWRITE_JPEG_QUALITY, config.THUMB_JPEG_QUALITY],
+            )
+            if thumb_ok:
+                thumb_filename = candidate_filename
+            else:
+                print(f"[TeamSelectionScreen] failed to write thumbnail for index {index}")
+        except Exception as e:
+            print(f"[TeamSelectionScreen] thumbnail generation failed for index {index}: {e}")
+
         self._series.photos.append(
             Photo(
                 index=index,
@@ -159,6 +185,8 @@ class TeamSelectionScreen(QWidget):
                 team=team,
                 price=self._price,
                 rotation=self._rotation,
+                thumb_filename=thumb_filename,
+                vivid_line=self._vivid_line,
             )
         )
         state.save_series(self._series)

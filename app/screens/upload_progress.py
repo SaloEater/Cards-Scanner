@@ -30,9 +30,22 @@ class UploadWorker(QThread):
         for i, photo in enumerate(photos_to_send):
             self.progress.emit(i, total)
             path = config.DATA_DIR / self._series.series_id / photo.filename
+            thumb_path = None
+            if photo.thumb_filename:
+                candidate = config.DATA_DIR / self._series.series_id / photo.thumb_filename
+                if candidate.exists():
+                    thumb_path = candidate
+                else:
+                    print(f"[UploadWorker] thumbnail missing, uploading without it: {candidate}")
             try:
                 backend.upload_photo(
-                    self._series.series_id, path, photo.name, photo.team, photo.price, photo.rotation
+                    self._series.series_id,
+                    path,
+                    photo.name,
+                    photo.team,
+                    photo.price,
+                    photo.rotation,
+                    thumb_path,
                 )
             except Exception as e:
                 self.upload_error.emit(str(e))

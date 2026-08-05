@@ -14,6 +14,8 @@ class Photo:
     team: str = ""
     price: str = ""
     rotation: int = 0  # display-only rotation in degrees clockwise (0/90/180/270); file on disk stays unrotated
+    thumb_filename: str = ""  # e.g. "0_thumb.jpg"; empty if no thumbnail was generated
+    vivid_line: float = 0.15  # operator-chosen label-safe split fraction used to build thumb_filename
 
 
 @dataclass

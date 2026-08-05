@@ -15,15 +15,17 @@ from app.screens.scanning import ScanningScreen
 from app.screens.team_selection import TeamSelectionScreen
 from app.screens.thumbnail_grid import ThumbnailGridScreen
 from app.screens.upload_progress import UploadProgressScreen
+from app.screens.vivid_line import VividLineScreen
 from app.spreadsheet import get_provider
 
 LAUNCH_IDX = 0
 CREATE_IDX = 1
 SCANNING_IDX = 2
 REVIEW_IDX = 3
-TEAM_IDX = 4
-THUMBNAIL_IDX = 5
-UPLOAD_IDX = 6
+VIVID_IDX = 4
+TEAM_IDX = 5
+THUMBNAIL_IDX = 6
+UPLOAD_IDX = 7
 
 
 class MainWindow(QMainWindow):
@@ -46,6 +48,7 @@ class MainWindow(QMainWindow):
         self._create = CreateSeriesScreen(provider=provider)
         self._scanning = ScanningScreen(camera_worker=self._camera, detector=detector)
         self._review = ReviewScreen(provider=provider)
+        self._vivid = VividLineScreen()
         self._team_selection = TeamSelectionScreen()
         self._thumbnail = ThumbnailGridScreen()
         self._upload_progress = UploadProgressScreen()
@@ -54,9 +57,10 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._create)           # 1
         self._stack.addWidget(self._scanning)         # 2
         self._stack.addWidget(self._review)           # 3
-        self._stack.addWidget(self._team_selection)   # 4
-        self._stack.addWidget(self._thumbnail)        # 5
-        self._stack.addWidget(self._upload_progress)  # 6
+        self._stack.addWidget(self._vivid)            # 4
+        self._stack.addWidget(self._team_selection)   # 5
+        self._stack.addWidget(self._thumbnail)        # 6
+        self._stack.addWidget(self._upload_progress)  # 7
 
         self._wire_signals()
 
@@ -72,7 +76,10 @@ class MainWindow(QMainWindow):
         self._scanning.navigate_to_thumbnail.connect(self._on_done_scanning)
 
         self._review.navigate_to_scanning.connect(self._on_approved_or_retaken)
-        self._review.navigate_to_team_selection.connect(self._on_to_team_selection)
+        self._review.navigate_to_team_selection.connect(self._on_to_vivid_line)
+
+        self._vivid.navigate_to_team_selection.connect(self._on_to_team_selection)
+        self._vivid.navigate_to_scanning.connect(self._on_approved_or_retaken)
 
         self._team_selection.navigate_to_scanning.connect(self._on_approved_or_retaken)
 
@@ -103,11 +110,24 @@ class MainWindow(QMainWindow):
         self._review.load(series, cropped_bgr)
         self._stack.setCurrentIndex(REVIEW_IDX)
 
-    def _on_to_team_selection(
+    def _on_to_vivid_line(
         self, series: Series, original_bgr: np.ndarray, name: str, price: str, rotation: int
     ) -> None:
         self._current_series = series
-        self._team_selection.load(series, original_bgr, name, price, rotation)
+        self._vivid.load(series, original_bgr, name, price, rotation)
+        self._stack.setCurrentIndex(VIVID_IDX)
+
+    def _on_to_team_selection(
+        self,
+        series: Series,
+        original_bgr: np.ndarray,
+        name: str,
+        price: str,
+        rotation: int,
+        vivid_line: float,
+    ) -> None:
+        self._current_series = series
+        self._team_selection.load(series, original_bgr, name, price, rotation, vivid_line)
         self._stack.setCurrentIndex(TEAM_IDX)
 
     def _on_approved_or_retaken(self, series: Series) -> None:
