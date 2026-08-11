@@ -20,11 +20,10 @@ from app import config, state
 from app.models import Series
 
 _THUMB_W, _THUMB_H = 150, 210
-_VIVID_W, _VIVID_H = 50, 70
 _COLUMNS = 4
 
 
-def _load_thumb(path: Path, rotation: int = 0, max_w: int = _THUMB_W, max_h: int = _THUMB_H) -> QPixmap | None:
+def _load_thumb(path: Path, rotation: int = 0) -> QPixmap | None:
     bgr = cv2.imread(str(path))
     if bgr is None:
         return None
@@ -34,19 +33,13 @@ def _load_thumb(path: Path, rotation: int = 0, max_w: int = _THUMB_W, max_h: int
     pixmap = QPixmap.fromImage(img.copy())
     if rotation:
         pixmap = pixmap.transformed(QTransform().rotate(rotation), Qt.TransformationMode.SmoothTransformation)
-    return pixmap.scaled(max_w, max_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+    return pixmap.scaled(_THUMB_W, _THUMB_H, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
 
 class ThumbnailCard(QWidget):
     remove_requested = Signal()
 
-    def __init__(
-        self,
-        pixmap: QPixmap | None,
-        uploaded: bool = False,
-        vivid_pixmap: QPixmap | None = None,
-        parent=None,
-    ) -> None:
+    def __init__(self, pixmap: QPixmap | None, uploaded: bool = False, parent=None) -> None:
         super().__init__(parent)
         self.setFixedSize(_THUMB_W, _THUMB_H)
 
@@ -58,13 +51,6 @@ class ThumbnailCard(QWidget):
             img.setPixmap(pixmap)
         else:
             img.setText("?")
-
-        if vivid_pixmap:
-            vivid = QLabel(self)
-            vivid.setPixmap(vivid_pixmap)
-            vivid.setFixedSize(vivid_pixmap.size())
-            vivid.setStyleSheet("border: 1px solid #4caf50; background: #222;")
-            vivid.move(_THUMB_W - vivid_pixmap.width() - 4, _THUMB_H - vivid_pixmap.height() - 4)
 
         btn = QPushButton("✕", self)
         btn.setFixedSize(22, 22)
@@ -174,15 +160,7 @@ class ThumbnailGridScreen(QWidget):
         for i, photo in enumerate(self._series.photos):
             row, col = divmod(i, _COLUMNS)
             img_path = config.DATA_DIR / self._series.series_id / photo.filename
-            vivid_pixmap = None
-            if photo.thumb_filename:
-                vivid_path = config.DATA_DIR / self._series.series_id / photo.thumb_filename
-                vivid_pixmap = _load_thumb(vivid_path, photo.rotation, _VIVID_W, _VIVID_H)
-            card = ThumbnailCard(
-                pixmap=_load_thumb(img_path, photo.rotation),
-                uploaded=photo.uploaded,
-                vivid_pixmap=vivid_pixmap,
-            )
+            card = ThumbnailCard(pixmap=_load_thumb(img_path, photo.rotation), uploaded=photo.uploaded)
             card.remove_requested.connect(lambda checked=False, idx=i: self._remove_photo(idx))
             self._grid.addWidget(card, row, col)
 
@@ -192,9 +170,6 @@ class ThumbnailGridScreen(QWidget):
         photo = self._series.photos[photo_index]
         file_path = config.DATA_DIR / self._series.series_id / photo.filename
         file_path.unlink(missing_ok=True)
-        if photo.thumb_filename:
-            thumb_path = config.DATA_DIR / self._series.series_id / photo.thumb_filename
-            thumb_path.unlink(missing_ok=True)
 
         self._series.photos.pop(photo_index)
 
@@ -207,15 +182,6 @@ class ThumbnailGridScreen(QWidget):
                     old_path.rename(series_dir / new_filename)
                 p.index = new_idx
                 p.filename = new_filename
-
-                if p.thumb_filename:
-                    old_thumb_path = series_dir / p.thumb_filename
-                    if old_thumb_path.exists():
-                        new_thumb_filename = f"{new_idx}_thumb.jpg"
-                        old_thumb_path.rename(series_dir / new_thumb_filename)
-                        p.thumb_filename = new_thumb_filename
-                    else:
-                        p.thumb_filename = ""
 
         state.save_series(self._series)
         count = len(self._series.photos)

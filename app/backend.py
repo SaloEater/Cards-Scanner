@@ -22,36 +22,21 @@ def create_series(name: str, total_cards: int = 0, default_price: str = "") -> d
 
 
 def upload_photo(
-    series_id: str,
-    filepath: Path,
-    name: str,
-    team: str = "",
-    price: str = "",
-    rotation: int = 0,
-    thumb_path: Path | None = None,
+    series_id: str, filepath: Path, name: str, team: str = "", price: str = "", rotation: int = 0
 ) -> dict:
     with httpx.Client(base_url=config.BACKEND_URL, timeout=60) as c:
         with open(filepath, "rb") as f:
-            files = {"file": (filepath.name, f, "image/jpeg")}
-            thumb_file = None
-            try:
-                if thumb_path is not None and thumb_path.exists():
-                    thumb_file = open(thumb_path, "rb")
-                    files["thumbnail"] = (thumb_path.name, thumb_file, "image/jpeg")
-                r = c.post(
-                    "/api/photo/upload",
-                    data={
-                        "series_id": series_id,
-                        "name": name,
-                        "team": team,
-                        "price": price,
-                        "rotation": str(rotation),
-                    },
-                    files=files,
-                )
-            finally:
-                if thumb_file is not None:
-                    thumb_file.close()
+            r = c.post(
+                "/api/photo/upload",
+                data={
+                    "series_id": series_id,
+                    "name": name,
+                    "team": team,
+                    "price": price,
+                    "rotation": str(rotation),
+                },
+                files={"file": (filepath.name, f, "image/jpeg")},
+            )
         r.raise_for_status()
         payload = r.json()
         if payload.get("error"):
