@@ -177,8 +177,7 @@ class ThumbnailGridScreen(QWidget):
         for new_idx, p in enumerate(self._series.photos):
             if p.index != new_idx:
                 old_path = series_dir / p.filename
-                ext = p.filename.rsplit(".", 1)[-1] if "." in p.filename else "jpg"
-                new_filename = f"{new_idx}.{ext}"
+                new_filename = f"{new_idx}.jpg"
                 if old_path.exists():
                     old_path.rename(series_dir / new_filename)
                 p.index = new_idx

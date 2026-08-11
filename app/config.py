@@ -24,23 +24,12 @@ def _float(key: str, default: float) -> float:
     return float(v) if v is not None else default
 
 
-def _bool(key: str, default: bool) -> bool:
-    v = _env.get(key)
-    if v is None:
-        return default
-    return v.strip().lower() in ("1", "true", "yes")
-
-
 DATA_DIR: Path = Path(_str("DATA_DIR", str(Path.home() / ".card-scanner")))
 BACKEND_URL: str = _str("BACKEND_URL", "https://seashell-app-2rkwm.ondigitalocean.app")
 
 CARD_OUTPUT_W: int = _int("CARD_OUTPUT_W", 750)
 CARD_OUTPUT_H: int = _int("CARD_OUTPUT_H", 1050)
 JPEG_QUALITY: int = _int("JPEG_QUALITY", 95)
-
-RAW: bool        = _bool("RAW", False)
-FINAL_WIDTH: int  = _int("FINAL_WIDTH", 750)
-FINAL_HEIGHT: int = _int("FINAL_HEIGHT", 1050)
 
 CAMERA_INDEX: int = _int("CAMERA_INDEX", 0)
 CAMERA_WIDTH: int = _int("CAMERA_WIDTH", 2560)
