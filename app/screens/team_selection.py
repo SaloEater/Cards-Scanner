@@ -143,8 +143,10 @@ class TeamSelectionScreen(QWidget):
         index = len(self._series.photos)
         series_dir = state.ensure_series_dir(self._series.series_id)
         img = self._final_bgr
-        if img.shape[1] != config.FINAL_WIDTH or img.shape[0] != config.FINAL_HEIGHT:
-            img = cv2.resize(img, (config.FINAL_WIDTH, config.FINAL_HEIGHT), interpolation=cv2.INTER_AREA)
+        h, w = img.shape[:2]
+        scale = min(config.CARD_OUTPUT_W / w, config.CARD_OUTPUT_H / h)
+        if scale < 1.0:
+            img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
         if config.RAW:
             filename = f"{index}.png"
             ok = cv2.imwrite(str(series_dir / filename), img)

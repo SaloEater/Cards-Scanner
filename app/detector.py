@@ -18,6 +18,7 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
     return rect
 
 
+
 class CardDetector:
     def __init__(self) -> None:
         self.canny_low: int = config.CANNY_LOW
@@ -76,6 +77,8 @@ class CardDetector:
         return self._stable_bounds
 
     def crop_card(self, bgr: np.ndarray, bounds: np.ndarray | None) -> np.ndarray:
+        fh, fw = bgr.shape[:2]
+        print(f"[crop_card] frame={fw}×{fh}, bounds={'none' if bounds is None else bounds.tolist()}")
         if bounds is not None:
             bw = int(np.linalg.norm(bounds[1] - bounds[0]))
             bh = int(np.linalg.norm(bounds[3] - bounds[0]))
@@ -88,13 +91,13 @@ class CardDetector:
                 dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
             m = cv2.getPerspectiveTransform(bounds.astype(np.float32), dst)
             warped = cv2.warpPerspective(bgr, m, (out_w, out_h))
-            max_side = config.CARD_OUTPUT_H
-            if max(out_w, out_h) > max_side:
-                scale = max_side / max(out_w, out_h)
+            scale = max(config.CARD_OUTPUT_W / out_w, config.CARD_OUTPUT_H / out_h)
+            if abs(scale - 1.0) > 0.01:
+                interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC
                 warped = cv2.resize(
                     warped,
                     (int(out_w * scale), int(out_h * scale)),
-                    interpolation=cv2.INTER_AREA,
+                    interpolation=interp,
                 )
             return warped
 
@@ -111,13 +114,15 @@ class CardDetector:
         x0 = (fw - crop_w) // 2
         y0 = (fh - crop_h) // 2
         center = bgr[y0:y0 + crop_h, x0:x0 + crop_w]
-        max_side = config.CARD_OUTPUT_H
-        scale = max_side / max(crop_w, crop_h)
-        return cv2.resize(
-            center,
-            (int(crop_w * scale), int(crop_h * scale)),
-            interpolation=cv2.INTER_AREA,
-        )
+        scale = max(config.CARD_OUTPUT_W / crop_w, config.CARD_OUTPUT_H / crop_h)
+        if abs(scale - 1.0) > 0.01:
+            interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC
+            center = cv2.resize(
+                center,
+                (int(crop_w * scale), int(crop_h * scale)),
+                interpolation=interp,
+            )
+        return center
 
     def detect_debug(
         self, bgr: np.ndarray

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from collections import deque
+import cv2
 import numpy as np
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QComboBox,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -183,6 +185,10 @@ class ScanningScreen(QWidget):
         capture_btn.clicked.connect(self._camera.request_capture)
         right.addWidget(capture_btn)
 
+        upload_btn = QPushButton("Upload Photo")
+        upload_btn.clicked.connect(self._on_upload_photo)
+        right.addWidget(upload_btn)
+
         done_btn = QPushButton("Done Scanning  [Esc]")
         done_btn.clicked.connect(self._on_done)
         right.addWidget(done_btn)
@@ -320,6 +326,23 @@ class ScanningScreen(QWidget):
         self._rotation = (self._rotation - 90) % 360
         self._rot_label.setText(f"{self._rotation}°")
         self._camera.set_rotation(self._rotation)
+
+    def _on_upload_photo(self) -> None:
+        if self._series is None:
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select photo", "", "Images (*.jpg *.jpeg *.png *.webp *.bmp)"
+        )
+        if not path:
+            return
+        bgr = cv2.imread(path)
+        if bgr is None:
+            self._status_label.setText("Failed to load image")
+            self._status_label.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
+            return
+        bounds = self._detector._detect_raw(bgr)
+        cropped = self._detector.crop_card(bgr, bounds)
+        self.navigate_to_review.emit(self._series, cropped)
 
     def _on_done(self) -> None:
         if self._series is not None:

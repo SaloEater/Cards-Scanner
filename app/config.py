@@ -38,9 +38,7 @@ CARD_OUTPUT_W: int = _int("CARD_OUTPUT_W", 750)
 CARD_OUTPUT_H: int = _int("CARD_OUTPUT_H", 1050)
 JPEG_QUALITY: int = _int("JPEG_QUALITY", 95)
 
-RAW: bool        = _bool("RAW", False)
-FINAL_WIDTH: int  = _int("FINAL_WIDTH", 750)
-FINAL_HEIGHT: int = _int("FINAL_HEIGHT", 1050)
+RAW: bool = _bool("RAW", False)
 
 CAMERA_INDEX: int = _int("CAMERA_INDEX", 0)
 CAMERA_WIDTH: int = _int("CAMERA_WIDTH", 2560)
