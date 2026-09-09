@@ -90,18 +90,8 @@ class CardDetector:
                 out_w, out_h = bw, bh
                 dst = np.float32([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]])
             m = cv2.getPerspectiveTransform(bounds.astype(np.float32), dst)
-            warped = cv2.warpPerspective(bgr, m, (out_w, out_h))
-            scale = max(config.CARD_OUTPUT_W / out_w, config.CARD_OUTPUT_H / out_h)
-            if abs(scale - 1.0) > 0.01:
-                interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC
-                warped = cv2.resize(
-                    warped,
-                    (int(out_w * scale), int(out_h * scale)),
-                    interpolation=interp,
-                )
-            return warped
+            return cv2.warpPerspective(bgr, m, (out_w, out_h))
 
-        fh, fw = bgr.shape[:2]
         card_ratio = config.CARD_ASPECT_TARGET  # tall side / short side
         if fw >= fh:
             crop_h = fh
@@ -113,16 +103,7 @@ class CardDetector:
         crop_h = min(crop_h, fh)
         x0 = (fw - crop_w) // 2
         y0 = (fh - crop_h) // 2
-        center = bgr[y0:y0 + crop_h, x0:x0 + crop_w]
-        scale = max(config.CARD_OUTPUT_W / crop_w, config.CARD_OUTPUT_H / crop_h)
-        if abs(scale - 1.0) > 0.01:
-            interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC
-            center = cv2.resize(
-                center,
-                (int(crop_w * scale), int(crop_h * scale)),
-                interpolation=interp,
-            )
-        return center
+        return bgr[y0:y0 + crop_h, x0:x0 + crop_w]
 
     def detect_debug(
         self, bgr: np.ndarray

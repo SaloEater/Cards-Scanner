@@ -140,7 +140,7 @@ class TeamSelectionScreen(QWidget):
             return
         market = item.data(Qt.ItemDataRole.UserRole)
         team = market["nfl"]
-        index = len(self._series.photos)
+        index = self._series.next_photo_seq()
         series_dir = state.ensure_series_dir(self._series.series_id)
         img = self._final_bgr
         h, w = img.shape[:2]
@@ -148,10 +148,10 @@ class TeamSelectionScreen(QWidget):
         if scale < 1.0:
             img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
         if config.RAW:
-            filename = f"{index}.png"
+            filename = f"c{index}.png"
             ok = cv2.imwrite(str(series_dir / filename), img)
         else:
-            filename = f"{index}.jpg"
+            filename = f"c{index}.jpg"
             ok = cv2.imwrite(str(series_dir / filename), img, [cv2.IMWRITE_JPEG_QUALITY, config.JPEG_QUALITY])
         if not ok:
             self._error_label.setText(f"Failed to save {series_dir / filename}")

@@ -20,7 +20,17 @@ from app import config, state
 from app.models import Series
 
 _THUMB_W, _THUMB_H = 150, 210
+_CAPTION_H = 38  # name line + price line under the image
 _COLUMNS = 4
+
+
+def _price_text(price: str) -> str:
+    """Price is free text — typed on the review screen or pulled from a
+    spreadsheet column — so only add a symbol when it looks like a bare number."""
+    price = (price or "").strip()
+    if not price:
+        return "—"
+    return f"${price}" if price[0].isdigit() else price
 
 
 def _load_thumb(path: Path, rotation: int = 0) -> QPixmap | None:
@@ -39,11 +49,22 @@ def _load_thumb(path: Path, rotation: int = 0) -> QPixmap | None:
 class ThumbnailCard(QWidget):
     remove_requested = Signal()
 
-    def __init__(self, pixmap: QPixmap | None, uploaded: bool = False, parent=None) -> None:
+    def __init__(
+        self,
+        pixmap: QPixmap | None,
+        uploaded: bool = False,
+        name: str = "",
+        price: str = "",
+        parent=None,
+    ) -> None:
         super().__init__(parent)
-        self.setFixedSize(_THUMB_W, _THUMB_H)
+        self.setFixedSize(_THUMB_W, _THUMB_H + _CAPTION_H)
 
-        img = QLabel(self)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        img = QLabel()
         img.setFixedSize(_THUMB_W, _THUMB_H)
         img.setAlignment(Qt.AlignmentFlag.AlignCenter)
         img.setStyleSheet("background: #333;")
@@ -51,6 +72,33 @@ class ThumbnailCard(QWidget):
             img.setPixmap(pixmap)
         else:
             img.setText("?")
+        root.addWidget(img)
+
+        caption = QWidget()
+        caption.setFixedSize(_THUMB_W, _CAPTION_H)
+        caption.setStyleSheet("background: #222;")
+        cap = QVBoxLayout(caption)
+        cap.setContentsMargins(4, 2, 4, 2)
+        cap.setSpacing(0)
+
+        name_label = QLabel()
+        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        name_label.setStyleSheet("color: #eee; font-size: 12px; font-weight: bold;")
+        name_label.setText(
+            name_label.fontMetrics().elidedText(
+                name.strip() or "—", Qt.TextElideMode.ElideRight, _THUMB_W - 10
+            )
+        )
+        if name.strip():
+            name_label.setToolTip(name)
+        cap.addWidget(name_label)
+
+        price_label = QLabel(_price_text(price))
+        price_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        price_label.setStyleSheet("color: #9ccc65; font-size: 12px;")
+        cap.addWidget(price_label)
+
+        root.addWidget(caption)
 
         btn = QPushButton("✕", self)
         btn.setFixedSize(22, 22)
@@ -61,6 +109,7 @@ class ThumbnailCard(QWidget):
             "QPushButton:hover { background: #b71c1c; }"
         )
         btn.clicked.connect(self.remove_requested)
+        btn.raise_()  # sits over the layout-managed image, not behind it
 
         if uploaded:
             badge = QLabel("✓", self)
@@ -71,6 +120,7 @@ class ThumbnailCard(QWidget):
                 "background: #4caf50; color: white; border-radius: 11px;"
                 "font-weight: bold; font-size: 12px;"
             )
+            badge.raise_()
 
 
 class ThumbnailGridScreen(QWidget):
@@ -160,7 +210,12 @@ class ThumbnailGridScreen(QWidget):
         for i, photo in enumerate(self._series.photos):
             row, col = divmod(i, _COLUMNS)
             img_path = config.DATA_DIR / self._series.series_id / photo.filename
-            card = ThumbnailCard(pixmap=_load_thumb(img_path, photo.rotation), uploaded=photo.uploaded)
+            card = ThumbnailCard(
+                pixmap=_load_thumb(img_path, photo.rotation),
+                uploaded=photo.uploaded,
+                name=photo.name,
+                price=photo.price,
+            )
             card.remove_requested.connect(lambda checked=False, idx=i: self._remove_photo(idx))
             self._grid.addWidget(card, row, col)
 
@@ -171,18 +226,11 @@ class ThumbnailGridScreen(QWidget):
         file_path = config.DATA_DIR / self._series.series_id / photo.filename
         file_path.unlink(missing_ok=True)
 
+        # Survivors keep their filenames. Renumbering them here is what let a
+        # later scan reuse a name the backend had already stored an object
+        # under; the series counter only moves forward, so a name now belongs
+        # to one card permanently.
         self._series.photos.pop(photo_index)
-
-        series_dir = config.DATA_DIR / self._series.series_id
-        for new_idx, p in enumerate(self._series.photos):
-            if p.index != new_idx:
-                old_path = series_dir / p.filename
-                ext = p.filename.rsplit(".", 1)[-1] if "." in p.filename else "jpg"
-                new_filename = f"{new_idx}.{ext}"
-                if old_path.exists():
-                    old_path.rename(series_dir / new_filename)
-                p.index = new_idx
-                p.filename = new_filename
 
         state.save_series(self._series)
         count = len(self._series.photos)
