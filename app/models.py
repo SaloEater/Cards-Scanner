@@ -13,6 +13,9 @@ class Photo:
     uploaded: bool = False
     team: str = ""
     price: str = ""
+    art_bounds: tuple[int, int, int, int] | None = None    # x, y, w, h in the stored image's pixels
+    label_bounds: tuple[int, int, int, int] | None = None
+    label_text: dict | None = None  # {"kind":"psa","rows":[[l,r]x4]} from OCR/operator
     rotation: int = 0  # display-only rotation in degrees clockwise (0/90/180/270); file on disk stays unrotated
 
 
@@ -44,6 +47,9 @@ class Series:
         valid = {f.name for f in dataclasses.fields(Photo)}
         photos = [Photo(**{k: v for k, v in p.items() if k in valid})
                   for p in d.get("photos", [])]
+        for ph in photos:  # JSON gives lists; keep them as tuples (or None)
+            ph.art_bounds = tuple(ph.art_bounds) if ph.art_bounds else None
+            ph.label_bounds = tuple(ph.label_bounds) if ph.label_bounds else None
         photo_seq = d.get("photo_seq")
         if photo_seq is None:
             # State written before the counter existed: resume past the highest

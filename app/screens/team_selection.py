@@ -37,6 +37,17 @@ def _icon_for(sport: str, team_name: str) -> QIcon | None:
     return None
 
 
+def _scale_bounds(b, sx: float, sy: float, max_w: int, max_h: int):
+    if b is None:
+        return None
+    x, y, w, h = b
+    x0, y0 = int(round(x * sx)), int(round(y * sy))
+    x1, y1 = int(round((x + w) * sx)), int(round((y + h) * sy))
+    x0, y0 = max(0, min(x0, max_w - 1)), max(0, min(y0, max_h - 1))
+    x1, y1 = max(x0 + 1, min(x1, max_w)), max(y0 + 1, min(y1, max_h))
+    return (x0, y0, x1 - x0, y1 - y0)
+
+
 class TeamSelectionScreen(QWidget):
     navigate_to_scanning = Signal(object)  # Series
 
@@ -47,6 +58,9 @@ class TeamSelectionScreen(QWidget):
         self._name: str = ""
         self._price: str = ""
         self._rotation: int = 0
+        self._art_bounds: tuple[int, int, int, int] | None = None
+        self._label_bounds: tuple[int, int, int, int] | None = None
+        self._label_text: dict | None = None
         self._active_sport: str = "nfl"
         self._sport_btns: dict[str, QPushButton] = {}
         self._build_ui()
@@ -126,12 +140,18 @@ class TeamSelectionScreen(QWidget):
         name: str,
         price: str = "",
         rotation: int = 0,
+        art_bounds: tuple[int, int, int, int] | None = None,
+        label_bounds: tuple[int, int, int, int] | None = None,
+        label_text: dict | None = None,
     ) -> None:
         self._series = series
         self._final_bgr = final_bgr
         self._name = name
         self._price = price
         self._rotation = rotation
+        self._art_bounds = art_bounds
+        self._label_bounds = label_bounds
+        self._label_text = label_text
         self._error_label.hide()
         self._list.clearSelection()
 
@@ -145,8 +165,13 @@ class TeamSelectionScreen(QWidget):
         img = self._final_bgr
         h, w = img.shape[:2]
         scale = min(config.CARD_OUTPUT_W / w, config.CARD_OUTPUT_H / h)
+        art_bounds, label_bounds = self._art_bounds, self._label_bounds
         if scale < 1.0:
-            img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+            nw, nh = int(w * scale), int(h * scale)
+            img = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_AREA)
+            # Bounds must stay in the stored file's pixel space.
+            art_bounds = _scale_bounds(art_bounds, nw / w, nh / h, nw, nh)
+            label_bounds = _scale_bounds(label_bounds, nw / w, nh / h, nw, nh)
         if config.RAW:
             filename = f"c{index}.png"
             ok = cv2.imwrite(str(series_dir / filename), img)
@@ -165,6 +190,9 @@ class TeamSelectionScreen(QWidget):
                 team=team,
                 price=self._price,
                 rotation=self._rotation,
+                art_bounds=art_bounds,
+                label_bounds=label_bounds,
+                label_text=self._label_text,
             )
         )
         state.save_series(self._series)

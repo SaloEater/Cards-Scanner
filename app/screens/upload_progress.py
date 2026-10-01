@@ -32,7 +32,9 @@ class UploadWorker(QThread):
             path = config.DATA_DIR / self._series.series_id / photo.filename
             try:
                 backend.upload_photo(
-                    self._series.series_id, path, photo.name, photo.team, photo.price, photo.rotation
+                    self._series.series_id, path, photo.name, photo.team, photo.price, photo.rotation,
+                    art_bounds=photo.art_bounds, label_bounds=photo.label_bounds,
+                    label_text=photo.label_text,
                 )
             except Exception as e:
                 self.upload_error.emit(str(e))

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from app.camera import CameraWorker
 from app.detector import CardDetector
 from app.models import Series
+from app.screens.crop import CropScreen
 from app.screens.create_series import CreateSeriesScreen
 from app.screens.launch import LaunchScreen
 from app.screens.review import ReviewScreen
@@ -26,6 +27,7 @@ REVIEW_IDX = 4
 TEAM_IDX = 5
 THUMBNAIL_IDX = 6
 UPLOAD_IDX = 7
+CROP_IDX = 8
 
 
 class MainWindow(QMainWindow):
@@ -35,6 +37,11 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(900, 700)
 
         self._current_series: Series | None = None
+        # Bounds from the Crop screen, carried past Review (whose signature stays
+        # unchanged) until the photo record is created on the team screen.
+        self._pending_art_bounds: tuple[int, int, int, int] | None = None
+        self._pending_label_bounds: tuple[int, int, int, int] | None = None
+        self._pending_label_text: dict | None = None
 
         detector = CardDetector()
         self._camera = CameraWorker(detector=detector)
@@ -48,6 +55,7 @@ class MainWindow(QMainWindow):
         self._create = CreateSeriesScreen(provider=provider)
         self._scanning = ScanningScreen(camera_worker=self._camera, detector=detector)
         self._sharpen = SharpenTopScreen()
+        self._crop = CropScreen()
         self._review = ReviewScreen(provider=provider)
         self._team_selection = TeamSelectionScreen()
         self._thumbnail = ThumbnailGridScreen()
@@ -62,6 +70,8 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._thumbnail)        # 6
         self._stack.addWidget(self._upload_progress)  # 7
 
+        self._stack.addWidget(self._crop)             # 8
+
         self._wire_signals()
 
     def _wire_signals(self) -> None:
@@ -72,12 +82,15 @@ class MainWindow(QMainWindow):
 
         self._create.navigate_to_scanning.connect(self._on_series_created)
 
-        # Sharpen stage is bypassed: capture goes straight to review. Swap this
-        # back to _on_to_sharpen to put the screen back in the flow.
-        self._scanning.navigate_to_review.connect(self._on_capture)
+        # Sharpen stage is bypassed: capture goes to the Crop screen, then review.
+        # Swap this back to _on_to_sharpen to put the sharpen screen back in the flow.
+        self._scanning.navigate_to_review.connect(self._on_to_crop)
         self._scanning.navigate_to_thumbnail.connect(self._on_done_scanning)
 
-        self._sharpen.navigate_to_review.connect(self._on_capture)
+        self._sharpen.navigate_to_review.connect(self._on_to_crop)
+
+        self._crop.navigate_to_review.connect(self._on_capture)
+        self._crop.navigate_to_scanning.connect(self._on_approved_or_retaken)
 
         self._review.navigate_to_scanning.connect(self._on_approved_or_retaken)
         self._review.navigate_to_team_selection.connect(self._on_to_team_selection)
@@ -111,20 +124,37 @@ class MainWindow(QMainWindow):
         self._sharpen.load(series, raw_bgr)
         self._stack.setCurrentIndex(SHARPEN_IDX)
 
-    def _on_capture(self, series: Series, cropped_bgr: np.ndarray) -> None:
+    def _on_to_crop(self, series: Series, cropped_bgr: np.ndarray) -> None:
         # crop_card returns the raw warp; the rescale to output size used to
-        # happen on the sharpen screen, so apply it here now that the stage is
-        # bypassed. rescale is idempotent, so the sharpen path (which already
-        # rescales) stays correct if it is wired back in.
+        # happen on the sharpen screen, so apply it here, BEFORE Crop, so the
+        # art/label bounds refer to the exact pixels that get uploaded. rescale
+        # is idempotent, so the sharpen path (which already rescales) stays
+        # correct if it is wired back in.
         self._current_series = series
-        self._review.load(series, rescale(cropped_bgr))
+        self._pending_art_bounds = None
+        self._pending_label_bounds = None
+        self._pending_label_text = None
+        # Full-size warp goes along so OCR reads the label at native resolution.
+        self._crop.load(series, rescale(cropped_bgr), full_bgr=cropped_bgr)
+        self._stack.setCurrentIndex(CROP_IDX)
+
+    def _on_capture(self, series: Series, image_bgr: np.ndarray, art_bounds, label_bounds, label_text=None) -> None:
+        self._current_series = series
+        self._pending_art_bounds = art_bounds
+        self._pending_label_bounds = label_bounds
+        self._pending_label_text = label_text
+        self._review.load(series, image_bgr)
         self._stack.setCurrentIndex(REVIEW_IDX)
 
     def _on_to_team_selection(
         self, series: Series, original_bgr: np.ndarray, name: str, price: str, rotation: int
     ) -> None:
         self._current_series = series
-        self._team_selection.load(series, original_bgr, name, price, rotation)
+        self._team_selection.load(
+            series, original_bgr, name, price, rotation,
+            self._pending_art_bounds, self._pending_label_bounds,
+            self._pending_label_text,
+        )
         self._stack.setCurrentIndex(TEAM_IDX)
 
     def _on_approved_or_retaken(self, series: Series) -> None:
