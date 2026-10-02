@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-from PySide6.QtCore import QPointF, QRectF, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QPointF, QRectF, QSettings, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QColor, QImage, QKeySequence, QPainter, QPen, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -296,14 +296,17 @@ class CropScreen(QWidget):
         grid.setColumnStretch(0, 7)
         grid.setColumnStretch(1, 3)
         self._cells: list[QLineEdit] = []
+        self._base_pt = QLineEdit().font().pointSizeF()
+        try:
+            scale = float(QSettings("MOB", "CardCrop").value("label_text_font_scale", 1.0))
+        except (TypeError, ValueError):
+            scale = 1.0
+        scale = min(max(round(scale * 20) / 20, 0.5), 1.5)
         for row in range(4):
             for col in range(2):
                 e = QLineEdit()
                 e.setMaxLength(64)  # backend rejects label_text cells longer than 64 characters
-                # Half the default font: eight fields of OCR text otherwise crowd the side panel.
-                f = e.font()
-                f.setPointSizeF(max(f.pointSizeF() * 0.5, 6.0))
-                e.setFont(f)
+                e.setFont(self._scaled_font(e.font(), scale))
                 if col == 1:
                     e.setAlignment(Qt.AlignmentFlag.AlignRight)
                 grid.addWidget(e, row, col)
@@ -313,6 +316,21 @@ class CropScreen(QWidget):
         self._reread_btn.clicked.connect(self._reread)
         grid.addWidget(self._reread_btn, 4, 0, 1, 2)
         rl.addWidget(self._text_box)
+
+        size_row = QHBoxLayout()
+        size_row.addWidget(QLabel("Text size"))
+        self._font_slider = QSlider(Qt.Orientation.Horizontal)
+        self._font_slider.setRange(50, 150)
+        self._font_slider.setSingleStep(5)
+        self._font_slider.setPageStep(5)
+        self._font_slider.setValue(int(round(scale * 100)))
+        self._font_slider.setFocusPolicy(Qt.FocusPolicy.ClickFocus)  # keep Space/Enter for Accept
+        self._font_slider.valueChanged.connect(self._on_font_scale)
+        size_row.addWidget(self._font_slider, stretch=1)
+        self._font_value = QLabel(f"\u00d7{scale:.2f}")
+        self._font_value.setMinimumWidth(48)
+        size_row.addWidget(self._font_value)
+        rl.addLayout(size_row)
 
         pad_row = QHBoxLayout()
         pad_row.addWidget(QLabel("Padding"))
@@ -403,6 +421,17 @@ class CropScreen(QWidget):
             self._reread()
 
     # ── label text (OCR) ──────────────────────────────────────────────────
+
+    def _scaled_font(self, font, scale: float):
+        font.setPointSizeF(max(self._base_pt * scale, 6.0))
+        return font
+
+    def _on_font_scale(self, value: int) -> None:
+        scale = value / 100
+        self._font_value.setText(f"\u00d7{scale:.2f}")
+        for e in self._cells:
+            e.setFont(self._scaled_font(e.font(), scale))
+        QSettings("MOB", "CardCrop").setValue("label_text_font_scale", scale)
 
     def _set_cells(self, text: dict | None) -> None:
         rows = (text or {}).get("rows") or []
