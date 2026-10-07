@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-from PySide6.QtCore import QPointF, QRectF, QSettings, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QEvent, QPointF, QRectF, QSettings, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QFontDatabase, QImage, QKeySequence, QPainter, QPainterPath, QPen, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -526,6 +526,10 @@ class CropScreen(QWidget):
         r = 0
         self._tune_preview = QLabel()
         self._tune_preview.setMinimumHeight(110)
+        # Width follows the panel, never the pixmap (a QLabel's size hint is its pixmap, which would
+        # otherwise push the panel wider); height is set per render to fit the whole bitmap.
+        self._tune_preview.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self._tune_preview.installEventFilter(self)  # re-render when its width settles (eventFilter)
         self._tune_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._tune_preview.setStyleSheet("background: #222; border: 1px solid #555;")
         form.addWidget(self._tune_preview, r, 0, 1, 2); r += 1
@@ -733,7 +737,7 @@ class CropScreen(QWidget):
 
     def _paint_tune_preview(self, bw: np.ndarray, words, splits, logo: Rect | None) -> None:
         bh, bwid = bw.shape[:2]
-        pw = max(200, self._tune_preview.width() - 4)
+        pw = max(50, self._tune_preview.width() - 4)  # fit the label's width, never wider
         k = pw / bwid
         pix = _bgr_to_pixmap(cv2.cvtColor(bw, cv2.COLOR_GRAY2BGR)).scaled(
             pw, max(1, int(bh * k)), Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
@@ -756,7 +760,7 @@ class CropScreen(QWidget):
             p.drawRect(QRectF(lx * k, ly * k, lw * k, lh * k))
         p.end()
         self._tune_preview.setPixmap(pix)
-        self._tune_preview.setMinimumHeight(min(pix.height() + 4, 220))
+        self._tune_preview.setFixedHeight(pix.height() + 4)  # whole bitmap visible; the panel scrolls
 
     def _show_result(self, r: OcrResult) -> None:
         self._refresh_tune_preview()
@@ -990,6 +994,15 @@ class CropScreen(QWidget):
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
         self._fit_canvas()
+
+    def eventFilter(self, obj, event) -> bool:
+        # The Tune OCR bitmap is rendered at the preview label's width; that width is only final after
+        # the layout settles, so re-render on the label's own resize. Height changes (we set them per
+        # render) are ignored, which keeps this from looping.
+        if obj is self._tune_preview and event.type() == QEvent.Type.Resize:
+            if event.size().width() != event.oldSize().width() and self._tune_scroll.isVisible():
+                self._refresh_tune_preview(instant=True)
+        return super().eventFilter(obj, event)
         self._update_preview()
 
     def _on_accept(self) -> None:
