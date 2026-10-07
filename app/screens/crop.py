@@ -369,7 +369,10 @@ class CropScreen(QWidget):
 
         self._canvas = _CropCanvas()
         self._canvas.changed.connect(self._on_canvas_changed)
-        outer.addWidget(self._canvas, stretch=3)
+        # Width is set by _fit_canvas() to wrap the card at the available height; the right panel
+        # takes the rest.
+        self._canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        outer.addWidget(self._canvas)
 
         right = QWidget()
         rl = QVBoxLayout(right)
@@ -384,7 +387,9 @@ class CropScreen(QWidget):
         self._preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._preview.setStyleSheet("background: #222; border: 1px solid #555;")
         self._preview.setMinimumSize(200, 300)
-        self._preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # Ignored, not Expanding: the panel scrolls, and a QLabel's size hint follows its pixmap — the
+        # preview is re-rendered at the label's size, so with Expanding it could keep growing itself.
+        self._preview.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
         rl.addWidget(self._preview, stretch=1)
 
         self._text_box = QGroupBox("Label text")
@@ -465,7 +470,16 @@ class CropScreen(QWidget):
         retake_btn.clicked.connect(self._on_retake)
         rl.addWidget(retake_btn)
 
-        outer.addWidget(right, stretch=1)
+        # The whole right panel scrolls vertically: when its contents (preview, label text, sliders,
+        # Tune OCR) need more height than the window has, Qt would otherwise squeeze them on top of
+        # each other.
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        right_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        right_scroll.setWidget(right)
+        outer.addWidget(right_scroll, stretch=1)
+        self._outer = outer
 
         for key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
             QShortcut(QKeySequence(key), self).activated.connect(self._on_accept)
@@ -596,12 +610,10 @@ class CropScreen(QWidget):
         reset.clicked.connect(self._reset_ocr_settings)
         form.addWidget(reset, r, 0, 1, 2)
 
-        self._tune_scroll = QScrollArea()
-        self._tune_scroll.setWidgetResizable(True)
-        self._tune_scroll.setWidget(box)
-        self._tune_scroll.setMinimumHeight(260)
+        # Shown/hidden by the "Tune OCR" toggle; scrolls with the rest of the right panel.
+        self._tune_scroll = box
         self._tune_scroll.hide()
-        rl.addWidget(self._tune_scroll, stretch=2)
+        rl.addWidget(self._tune_scroll)
         self._tune_btn.toggled.connect(self._on_tune_toggled)
 
         for w in (self._mode, self._up, self._psm):
@@ -775,6 +787,7 @@ class CropScreen(QWidget):
         self._last_result = None
         self._set_cells(label_text)
         self._canvas.set_image(bgr)
+        self._fit_canvas()
         if art_bounds is not None:
             self._canvas.art = tuple(art_bounds)
             self._set_label(tuple(label_bounds) if label_bounds else None)
@@ -959,8 +972,24 @@ class CropScreen(QWidget):
             Qt.TransformationMode.SmoothTransformation,
         ))
 
+    # Narrowest the right panel may get when the card is wide relative to the window.
+    _RIGHT_MIN_W = 360
+
+    def _fit_canvas(self) -> None:
+        """Size the canvas to wrap the card exactly at the screen's available height, so the image
+        has no black side bars and every spare pixel of width goes to the right panel."""
+        if self._bgr is None:
+            return
+        ih, iw = self._bgr.shape[:2]
+        m = self._outer.contentsMargins()
+        avail_h = max(self.height() - m.top() - m.bottom(), 1)
+        max_w = self.width() - m.left() - m.right() - self._outer.spacing() - self._RIGHT_MIN_W
+        w = round(avail_h * iw / ih)
+        self._canvas.setFixedWidth(max(200, min(w, max_w)))
+
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
+        self._fit_canvas()
         self._update_preview()
 
     def _on_accept(self) -> None:
